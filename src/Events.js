@@ -1,3 +1,6 @@
+/**
+ * @module
+ */
 
 /**
  * The `mouseup` event label

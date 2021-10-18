@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: Line</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Class: Line</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2><span class="attribs"><span class="type-signature"></span></span>Line<span class="signature">(anchor, direction)</span><span class="type-signature"></span></h2>
+        
+            <div class="class-description">A line</div>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+    <h2>Constructor</h2>
+    
+
+    
+    <h4 class="name" id="Line"><span class="type-signature"></span>new Line<span class="signature">(anchor, direction)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    A Line can be defined by two points, p1 and p2, through
+which it passes. Here, an anchor point is supplied for p1,
+and a unit vector, direction, is added to it to provided
+the second.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>anchor</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>direction</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Line.js.html">Line.js</a>, <a href="Line.js.html#line6">line 6</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Classes</h3>
+
+        <dl>
+            <dt><a href="Line.html">Line</a></dt>
+            <dd></dd>
+        </dl>
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="direction"><span class="type-signature"></span>direction<span class="type-signature"> :object</span></h4>
+
+
+
+
+<div class="description">
+    a unit vector describing the direction from p1
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Line.js.html">Line.js</a>, <a href="Line.js.html#line26">line 26</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="p1"><span class="type-signature"></span>p1<span class="type-signature"> :object</span></h4>
+
+
+
+
+<div class="description">
+    a vector describing a point through which the line passes
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Line.js.html">Line.js</a>, <a href="Line.js.html#line20">line 20</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="p2"><span class="type-signature"></span>p2<span class="type-signature"> :object</span></h4>
+
+
+
+
+<div class="description">
+    a vector describing a second point through which the line passes
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Line.js.html">Line.js</a>, <a href="Line.js.html#line32">line 32</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".intersection"><span class="type-signature">(static) </span>intersection<span class="signature">(l1, l2)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    determine the location that these lines intersect, if at all
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>l1</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the first Line to test for intersection</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>l2</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the second Line to test for intersection</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Line.js.html">Line.js</a>, <a href="Line.js.html#line50">line 50</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    the vector of the location of intersection, or null if the lines are parallel
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="intersectionWith"><span class="type-signature"></span>intersectionWith<span class="signature">(l)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    determine the location that this line intersects with another, if at all
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>l</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the Line to test for intersection against this Line</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Line.js.html">Line.js</a>, <a href="Line.js.html#line40">line 40</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    the vector of the location of intersection, or null if the lines are parallel
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-TextUtilities.html">TextUtilities</a></li></ul><h3>Classes</h3><ul><li><a href="Bezier.html">Bezier</a></li><li><a href="Circle.html">Circle</a></li><li><a href="Composition.html">Composition</a></li><li><a href="Compositor.html">Compositor</a></li><li><a href="Ellipse.html">Ellipse</a></li><li><a href="Image.html">Image</a></li><li><a href="Line.html">Line</a></li><li><a href="PrimitiveComponent.html">PrimitiveComponent</a></li><li><a href="Rectangle.html">Rectangle</a></li><li><a href="Text.html">Text</a></li><li><a href="VectorPath.html">VectorPath</a></li></ul><h3>Global</h3><ul><li><a href="global.html#_cubicBezier">_cubicBezier</a></li><li><a href="global.html#_getExtremes">_getExtremes</a></li><li><a href="global.html#_scaleVectorXY">_scaleVectorXY</a></li><li><a href="global.html#clearRect">clearRect</a></li><li><a href="global.html#CLICK">CLICK</a></li><li><a href="global.html#defaults">defaults</a></li><li><a href="global.html#drawBezier">drawBezier</a></li><li><a href="global.html#drawCircle">drawCircle</a></li><li><a href="global.html#drawEllipse">drawEllipse</a></li><li><a href="global.html#drawImage">drawImage</a></li><li><a href="global.html#drawPath">drawPath</a></li><li><a href="global.html#drawPolygon">drawPolygon</a></li><li><a href="global.html#drawRectangle">drawRectangle</a></li><li><a href="global.html#drawText">drawText</a></li><li><a href="global.html#FILL_STYLE">FILL_STYLE</a></li><li><a href="global.html#FONT">FONT</a></li><li><a href="global.html#FONT_FAMILY">FONT_FAMILY</a></li><li><a href="global.html#FONT_SIZE">FONT_SIZE</a></li><li><a href="global.html#FONT_STYLE">FONT_STYLE</a></li><li><a href="global.html#FONT_VARIANT">FONT_VARIANT</a></li><li><a href="global.html#FONT_WEIGHT">FONT_WEIGHT</a></li><li><a href="global.html#KEYDOWN">KEYDOWN</a></li><li><a href="global.html#KEYPRESS">KEYPRESS</a></li><li><a href="global.html#KEYUP">KEYUP</a></li><li><a href="global.html#LINE_CAP">LINE_CAP</a></li><li><a href="global.html#LINE_HEIGHT">LINE_HEIGHT</a></li><li><a href="global.html#LINE_JOIN">LINE_JOIN</a></li><li><a href="global.html#LINE_WIDTH">LINE_WIDTH</a></li><li><a href="global.html#MITER_LIMIT">MITER_LIMIT</a></li><li><a href="global.html#MOUSEDOWN">MOUSEDOWN</a></li><li><a href="global.html#MOUSEMOVE">MOUSEMOVE</a></li><li><a href="global.html#MOUSEOUT">MOUSEOUT</a></li><li><a href="global.html#MOUSEUP">MOUSEUP</a></li><li><a href="global.html#STROKE_STYLE">STROKE_STYLE</a></li><li><a href="global.html#TEXT_ALIGN">TEXT_ALIGN</a></li><li><a href="global.html#TEXT_BASELINE">TEXT_BASELINE</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.7</a> on Mon Oct 18 2021 19:35:29 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

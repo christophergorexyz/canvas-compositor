@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Bezier.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Bezier.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import {
+  drawBezier
+} from './Renderer';
+import {
+  PrimitiveComponent
+} from './PrimitiveComponent';
+import {
+  Vector
+} from 'vectorious';
+
+//TODO: There are multiple optimizations that can be done here, specifically with regard to calculating things only once. the extrema don't necessarily need recomputing just to get the bounding box. the bounding box itself could be stored within the PrimitiveComponent for all types
+
+/**
+ * A helper function for finding local extrema given possible solutions
+ * @param {object} start a component of the starting coordinate
+ * @param {object} c1 a component of the first control point
+ * @param {object} c2 a component of the second control point
+ * @param {object} end a component of the ending coordinate
+ * @param {object} t a possible solution
+ */
+function _cubicBezier(start, c1, c2, end, t) {
+  //uhh... i looked up *SO* much stuff on this, and even tried to work out the math myself,
+  //but this is ridiculous - where does this come from?
+  return start * (1 - t) * (1 - t) * (1 - t) + 3 * c1 * t * (1 - t) * (1 - t) + 3 * c2 * t * t * (1 - t) + end * t * t * t;
+}
+
+/**
+ * return the local extremes of the curve
+ * @param {object} start a component of the starting vector
+ * @param {object} c1 a component of the first control point
+ * @param {object} c2 a component of the second control point
+ * @param {object} end a component of the ending vector
+ */
+function _getExtremes(start, c1, c2, end) {
+  let a = 3 * end - 9 * c2 + 9 * c1 - 3 * start;
+  let b = 6 * c2 - 12 * c1 + 6 * start;
+  let c = 3 * c1 - 3 * start;
+
+  let solutions = [];
+  let localExtrema = [];
+
+  //"discriminant"
+  let disc = b * b - 4 * a * c;
+
+  if (disc >= 0) {
+    if (!Math.abs(a) > 0 &amp;&amp; Math.abs(b) > 0) {
+      solutions.push(-c / b);
+    } else if (Math.abs(a) > 0) {
+      solutions.push((-b + Math.sqrt(disc)) / (2 * a));
+      solutions.push((-b - Math.sqrt(disc)) / (2 * a));
+    } else {
+      throw new Error('no solutions!?!?!');
+    }
+
+    for (let t of solutions) {
+      if (0 &lt;= t &amp;&amp; t &lt;= 1) {
+        localExtrema.push(_cubicBezier(start, c1, c2, end, t));
+      }
+    }
+  }
+
+  localExtrema.push(start, end);
+
+  return localExtrema;
+}
+
+/**
+ * A Bezier curve
+ */
+export class Bezier extends PrimitiveComponent {
+
+  /**
+   * @param {object} options the options for the bezier curve
+   */
+  constructor(options) {
+    super(options);
+
+    let start = new Vector([options.start.x, options.start.y]);
+    let end = new Vector([options.end.x, options.end.y]);
+    let control1 = new Vector([options.control1.x, options.control1.y]);
+    let control2 = new Vector([options.control2.x, options.control2.y]);
+
+    /**
+     * The bounding box of the curve
+     */
+    this._boundingBox = null;
+
+    /**
+     * Helper to update the bounding box
+     */
+    this._boundingBoxNeedsUpdate = true;
+
+    let xExtrema = _getExtremes(start.x, control1.x, control2, end.x);
+    let yExtrema = _getExtremes(start.y, control1.y, control2.y, end.y);
+    super.d = new Vector([Math.min.apply(null, xExtrema), Math.min.apply(null, yExtrema)]);
+
+    /**
+     * The starting point of the curve
+     */
+    this._start = Vector.subtract(start, this.d);
+
+    /**
+     * The ending point of the curve
+     */
+    this._end = Vector.subtract(end, this.d);
+
+    /**
+     * The first control point
+     */
+    this._control1 = Vector.subtract(control1, this.d);
+
+    /**
+     * The second control point
+     */
+    this._control2 = Vector.subtract(control2, this.d);
+  }
+
+  /**
+   * the bounding box of the bezier
+   * @type {{top:number, left:number, bottom:number, right:number}}
+   */
+  get boundingBox() {
+    //if (this._boundingBox === null || this._boundingBoxNeedsUpdate) {
+    let lineWidth = this.style.lineWidth;
+
+    let offset = this.offset;
+    let start = Vector.add(this._start, this.offset);
+    let control1 = Vector.add(this._control1, this.offset);
+    let control2 = Vector.add(this._control2, this.offset);
+    let end = Vector.add(this._end, this.offset);
+
+    let xExtrema = _getExtremes(start.x, control1.x, control2, end.x);
+    let yExtrema = _getExtremes(start.y, control1.y, control2.y, end.y);
+    this._boundingBox = {
+      top: Math.min.apply(null, yExtrema) - lineWidth,
+      right: Math.max.apply(null, xExtrema) + lineWidth,
+      bottom: Math.max.apply(null, yExtrema) + lineWidth,
+      left: Math.min.apply(null, xExtrema) - lineWidth
+    };
+    this._boundingBoxNeedsUpdate = false;
+    //}
+    return this._boundingBox;
+  }
+
+  /**
+   * render the bezier curve
+   */
+  render() {
+    drawBezier(
+      this._start,
+      this._end,
+      this._control1,
+      this._control2,
+      this._prerenderingContext,
+      this.style
+    );
+  }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-TextUtilities.html">TextUtilities</a></li></ul><h3>Classes</h3><ul><li><a href="Bezier.html">Bezier</a></li><li><a href="Circle.html">Circle</a></li><li><a href="Composition.html">Composition</a></li><li><a href="Compositor.html">Compositor</a></li><li><a href="Ellipse.html">Ellipse</a></li><li><a href="Image.html">Image</a></li><li><a href="Line.html">Line</a></li><li><a href="PrimitiveComponent.html">PrimitiveComponent</a></li><li><a href="Rectangle.html">Rectangle</a></li><li><a href="Text.html">Text</a></li><li><a href="VectorPath.html">VectorPath</a></li></ul><h3>Global</h3><ul><li><a href="global.html#_cubicBezier">_cubicBezier</a></li><li><a href="global.html#_getExtremes">_getExtremes</a></li><li><a href="global.html#_scaleVectorXY">_scaleVectorXY</a></li><li><a href="global.html#clearRect">clearRect</a></li><li><a href="global.html#CLICK">CLICK</a></li><li><a href="global.html#defaults">defaults</a></li><li><a href="global.html#drawBezier">drawBezier</a></li><li><a href="global.html#drawCircle">drawCircle</a></li><li><a href="global.html#drawEllipse">drawEllipse</a></li><li><a href="global.html#drawImage">drawImage</a></li><li><a href="global.html#drawPath">drawPath</a></li><li><a href="global.html#drawPolygon">drawPolygon</a></li><li><a href="global.html#drawRectangle">drawRectangle</a></li><li><a href="global.html#drawText">drawText</a></li><li><a href="global.html#FILL_STYLE">FILL_STYLE</a></li><li><a href="global.html#FONT">FONT</a></li><li><a href="global.html#FONT_FAMILY">FONT_FAMILY</a></li><li><a href="global.html#FONT_SIZE">FONT_SIZE</a></li><li><a href="global.html#FONT_STYLE">FONT_STYLE</a></li><li><a href="global.html#FONT_VARIANT">FONT_VARIANT</a></li><li><a href="global.html#FONT_WEIGHT">FONT_WEIGHT</a></li><li><a href="global.html#KEYDOWN">KEYDOWN</a></li><li><a href="global.html#KEYPRESS">KEYPRESS</a></li><li><a href="global.html#KEYUP">KEYUP</a></li><li><a href="global.html#LINE_CAP">LINE_CAP</a></li><li><a href="global.html#LINE_HEIGHT">LINE_HEIGHT</a></li><li><a href="global.html#LINE_JOIN">LINE_JOIN</a></li><li><a href="global.html#LINE_WIDTH">LINE_WIDTH</a></li><li><a href="global.html#MITER_LIMIT">MITER_LIMIT</a></li><li><a href="global.html#MOUSEDOWN">MOUSEDOWN</a></li><li><a href="global.html#MOUSEMOVE">MOUSEMOVE</a></li><li><a href="global.html#MOUSEOUT">MOUSEOUT</a></li><li><a href="global.html#MOUSEUP">MOUSEUP</a></li><li><a href="global.html#STROKE_STYLE">STROKE_STYLE</a></li><li><a href="global.html#TEXT_ALIGN">TEXT_ALIGN</a></li><li><a href="global.html#TEXT_BASELINE">TEXT_BASELINE</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.7</a> on Mon Oct 18 2021 19:35:29 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

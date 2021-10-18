@@ -1,4 +1,8 @@
 /**
+ * @module
+ */
+
+/**
  * Default font size
  * @type {string}
  */

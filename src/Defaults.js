@@ -1,4 +1,8 @@
 /**
+ * @module
+ */
+
+/**
  * The default color to fill shapes drawn by the canvas context
  */
 export const FILL_STYLE = 'black';
