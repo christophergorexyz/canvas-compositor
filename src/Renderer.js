@@ -1,4 +1,8 @@
 /**
+ * @module
+ */
+
+/**
  * Erase everything drawn on the supplied rectangle for the given context.
  * @param {number} x the x coordinate of the top left corner
  * @param {number} y the y coordinate of the top left corner

@@ -32,6 +32,10 @@
     "no-trailing-spaces": [
       "error"
     ],
+    "eol-last": [
+      "error",
+      "always"
+    ],
     "jsdoc/check-alignment": 1
   }
 }
