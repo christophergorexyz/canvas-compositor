@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","names":["CanvasCompositor"],"sources":["../src/index.mjs"],"sourcesContent":["import { Compositor as CanvasCompositor } from './compositor.mjs';\nimport * as Components2d from './context-2d/index.mjs';\nexport default CanvasCompositor;\nexport { Components2d };\n"],"mappings":";;;;;;;AAAA;AACA;AAAuD;AAAA;AAAA;AAAA,eACxCA,sBAAgB;AAAA"}
