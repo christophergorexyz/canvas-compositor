@@ -4,7 +4,6 @@
   "description": "a light and performant canvas compositing engine",
   "main": "src/index.mjs",
   "scripts": {
-    "prepare": "npm run build",
     "clean": "rm -rf lib/* docs/* dist/*",
     "build": "jsdoc -r README.md src/ -d docs & babel src/ -d lib/ -D -s & (browserify src/index.mjs -s CanvasCompositor -d -t [ babelify ] | uglifyjs > dist/canvas-compositor.min.js)"
   },
