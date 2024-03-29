@@ -1,37 +1,36 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.drawImage = exports.drawText = exports.drawCircle = exports.drawEllipse = exports.drawRectangle = exports.drawBezier = exports.drawPolygon = exports.drawPath = void 0;
+import { Vector } from 'ts-matrix';
+
 /**
  * Draw a path, unclosed, with the given vertices
  * @param {object} vertices the path of vertices to be drawn
  * @param {object} context the 2D Context object for the canvas we're drawing onto
  * @param {object} style the style options to be used when drawing the path
  */
-function drawPath(vertices, context) {
-    context.beginPath();
-    context.moveTo(vertices[0].at(0), vertices[0].at(1));
-    for (let v = 1; v < vertices.length; v++) {
-        context.lineTo(vertices[v].at(0), vertices[v].at(1));
-    }
-    context.stroke();
+export function drawPath(vertices: Vector[], context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
+  context.beginPath();
+  context.moveTo(vertices[0].at(0), vertices[0].at(1));
+  for (let v = 1; v < vertices.length; v++) {
+    context.lineTo(vertices[v].at(0), vertices[v].at(1));
+  }
+  context.stroke();
 }
-exports.drawPath = drawPath;
+
 /**
  * Draw a closed polygon with the given vertices
  * @param {object} vertices the path of vertices to be drawn
  * @param {object} context the 2D Context object for the canvas we're drawing onto
  * @param {object} style the style options to be used when drawing the polygon
  */
-function drawPolygon(vertices, context) {
-    context.beginPath();
-    context.moveTo(vertices[0].at(0), vertices[0].at(1));
-    for (let v = 1; v < vertices.length; v++) {
-        context.lineTo(vertices[v].at(0), vertices[v].at(1));
-    }
-    context.closePath();
-    context.stroke();
+export function drawPolygon(vertices: Vector[], context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
+  context.beginPath();
+  context.moveTo(vertices[0].at(0), vertices[0].at(1));
+  for (let v = 1; v < vertices.length; v++) {
+    context.lineTo(vertices[v].at(0), vertices[v].at(1));
+  }
+  context.closePath();
+  context.stroke();
 }
-exports.drawPolygon = drawPolygon;
+
 /**
  * Draw a Bezier curve
  * @param {object} start the starting vertex
@@ -41,15 +40,15 @@ exports.drawPolygon = drawPolygon;
  * @param {object} context the 2D Context object for the canvas we're drawing onto
  * @param {object} style the style options to be used when drawing the curve
  */
-function drawBezier(start, end, c1, c2, context) {
-    //must `beginPath()` before `moveTo` to get correct starting position
-    context.beginPath();
-    context.moveTo(start.at(0), start.at(1));
-    context.bezierCurveTo(c1.at(0), c1.at(1), c2.at(0), c2.at(1), end.at(0), end.at(1));
-    context.stroke();
-    context.closePath();
+export function drawBezier(start: Vector, end: Vector, c1: Vector, c2: Vector, context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
+  //must `beginPath()` before `moveTo` to get correct starting position
+  context.beginPath();
+  context.moveTo(start.at(0), start.at(1));
+  context.bezierCurveTo(c1.at(0), c1.at(1), c2.at(0), c2.at(1), end.at(0), end.at(1));
+  context.stroke();
+  context.closePath();
 }
-exports.drawBezier = drawBezier;
+
 /**
  * Draw a rectangle
  * @param {number} x the x coordinate of the top let corner
@@ -59,12 +58,12 @@ exports.drawBezier = drawBezier;
  * @param {object} context the 2D Context object for the canvas we're drawing onto
  * @param {object} style the style options to be used when drawing the rectangle
  */
-function drawRectangle(offset, size, context) {
-    context.rect(offset.at(0), offset.at(1), size.at(0), size.at(1));
-    context.fill();
-    context.stroke();
+export function drawRectangle(offset: Vector, size: Vector, context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
+  context.rect(offset.at(0), offset.at(1), size.at(0), size.at(1));
+  context.fill();
+  context.stroke();
 }
-exports.drawRectangle = drawRectangle;
+
 //TODO: provide support for rotation and startAngle parameters
 /**
  * Draw an ellipse
@@ -75,13 +74,12 @@ exports.drawRectangle = drawRectangle;
  * @param {object} context the 2D Context object for the canvas we're drawing onto
  * @param {object} style the style options to be used when drawing the ellipse
  */
-function drawEllipse(center, radii, context) {
-    var _a;
-    context.ellipse(center.at(0), center.at(1), radii.at(0), (_a = radii.at(1)) !== null && _a !== void 0 ? _a : radii.at(0), 0, 0, 2 * Math.PI);
-    context.fill();
-    context.stroke();
+export function drawEllipse(center: Vector, radii: Vector, context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
+  context.ellipse(center.at(0), center.at(1), radii.at(0), radii.at(1) ?? radii.at(0), 0, 0, 2 * Math.PI);
+  context.fill();
+  context.stroke();
 }
-exports.drawEllipse = drawEllipse;
+
 /**
  * Draw a circle
  * @param {number} x the x coordinate of the center of the circle
@@ -90,14 +88,14 @@ exports.drawEllipse = drawEllipse;
  * @param {object} context the 2D Context object for the canvas we're drawing onto
  * @param {object} style the style options to be used when drawing the circle
  */
-function drawCircle(x, y, radius, context) {
-    context.arc(x, y, radius, 0, 2 * Math.PI);
-    //TODO: 2015-03-12 this is currently only supported by chrome & opera
-    //context.ellipse(x, y, radius, radius, 0, 0, 2 * Math.PI);
-    context.fill();
-    context.stroke();
+export function drawCircle(x: number, y: number, radius: number, context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
+  context.arc(x, y, radius, 0, 2 * Math.PI);
+  //TODO: 2015-03-12 this is currently only supported by chrome & opera
+  //context.ellipse(x, y, radius, radius, 0, 0, 2 * Math.PI);
+  context.fill();
+  context.stroke();
 }
-exports.drawCircle = drawCircle;
+
 /**
  * Draw text
  * @param {number} x the x coordinate of the top let corner
@@ -106,11 +104,11 @@ exports.drawCircle = drawCircle;
  * @param {object} context the 2D Context object for the canvas we're drawing onto
  * @param {object} style the style options to be used when drawing the text
  */
-function drawText(x, y, text, context) {
-    context.fillText(text, x, y);
-    //TODO: implement stroke text if specified
+export function drawText(x: number, y: number, text: string, context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
+  context.fillText(text, x, y);
+  //TODO: implement stroke text if specified
 }
-exports.drawText = drawText;
+
 /**
  * Draw an image
  * @param {number} x the x coordinate of the top let corner
@@ -119,11 +117,9 @@ exports.drawText = drawText;
  * @param {object} context the 2D Context object for the canvas we're drawing onto
  * @param {object} style the style options to be used when drawing the image
  */
-function drawImage(x, y, image, context) {
-    //no reason to draw 0-sized images
-    if (image.width > 0 && image.height > 0) {
-        context.drawImage(image, x, y, image.width, image.height);
-    }
+export function drawImage(x: number, y: number, image: HTMLImageElement, context: CanvasRenderingContext2D) {
+  //no reason to draw 0-sized images
+  if (image.width > 0 && image.height > 0) {
+    context.drawImage(image, x, y, image.width, image.height);
+  }
 }
-exports.drawImage = drawImage;
-//# sourceMappingURL=renderer.js.map

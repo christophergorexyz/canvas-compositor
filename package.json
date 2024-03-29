@@ -1,11 +1,15 @@
 {
   "name": "canvas-compositor",
-  "version": "3.0.2",
+  "version": "4.0.0",
   "description": "a light and performant canvas compositing engine",
-  "main": "src/index.mjs",
   "scripts": {
-    "clean": "rm -rf lib/* docs/* dist/*",
-    "build": "jsdoc -r README.md src/ -d docs & babel src/ -d lib/ -D -s & (browserify src/index.mjs -s CanvasCompositor -d -t [ babelify ] | uglifyjs > dist/canvas-compositor.min.js)"
+    "build": "tsc && esbuild --bundle lib/index.ts --sourcemap --outfile=dist/canvas-compositor.min.js",
+    "serve": "http-server -o demo/",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/christophergorexyz/canvas-compositor.git"
   },
   "keywords": [
     "2d",
@@ -13,28 +17,18 @@
     "compositing"
   ],
   "author": "Christopher J Gore",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:christophergorexyz/canvas-compositor.git"
-  },
   "license": "MIT",
-  "devDependencies": {
-    "@babel/cli": "^7.15.7",
-    "@babel/core": "^7.15.8",
-    "@babel/preset-env": "^7.15.8",
-    "@babel/runtime": "^7.15.4",
-    "babelify": "^10.0.0",
-    "browserify": "^16.5.2",
-    "jsdoc": "^3.6.7",
-    "uglify-js": "^3.14.2"
+  "bugs": {
+    "url": "https://github.com/christophergorexyz/canvas-compositor/issues"
   },
+  "homepage": "https://github.com/christophergorexyz/canvas-compositor#readme",
   "dependencies": {
-    "caniuse-lite": "^1.0.30001448",
-    "vectorious": "^5.5.0"
+    "ts-matrix": "^1.3.2"
   },
-  "babel": {
-    "presets": [
-      "@babel/env"
-    ]
+  "devDependencies": {
+    "@types/node": "^20.11.25",
+    "esbuild": "^0.20.1",
+    "http-server": "^14.1.1",
+    "typescript": "^5.4.2"
   }
 }

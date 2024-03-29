@@ -13,12 +13,16 @@
 </head>
 
 <body>
-  <canvas id="test-canvas" width="800" height="600" style="margin-top: 20px"></canvas>
+  <canvas id="test-canvas" width="800" height="600" style="margin-top: 20px">
+    <rectangle x="150" y="300" w="100" h="50">Blah</rectangle>
+    <circle x="350" y="100" r="30"></circle>
+  </canvas>
   <div id="canvas-debug">
     FPS <span id="fps"></span> X: <span id="mousex"></span> Y:
     <span id="mousey"></span>
   </div>
-  <script type="module" src="./dist/canvas-compositor.min.js"></script>
+  <script src="../dist/canvas-compositor.min.js"></script>
+  <script src="../demo/index.js"></script>
 </body>
 
 </html>
