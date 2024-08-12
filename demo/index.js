@@ -37,7 +37,7 @@ _rect.displacement.values = [300, 300];
 
 _rect.context.strokeStyle = 'cyan';
 _rect.context.fillStyle = 'rebeccapurple';
-_rect.context.lineWidth = 3.0;
+_rect.context.lineWidth = 2.0;
 
 // let _path = new VectorPath({
 //   vertices: [{

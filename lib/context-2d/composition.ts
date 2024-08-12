@@ -1,4 +1,3 @@
-import { IBoundingBox } from './bounding-box';
 import Component from './component';
 
 /**
@@ -13,31 +12,13 @@ import Component from './component';
 export default class Composition extends Component {
 
   /**
-   * the bounding box of the composition (i.e., the containing bounds of all the children of this composition)
-   */
-  get boundingBox(): IBoundingBox {
-    const top = 0,
-      left = 0,
-      bottom = this.height,
-      right = this.width;
-
-    return this.children.map(c => c.boundingBox).reduce((boundingBox, acc) => ({
-      top: Math.min(boundingBox.top, acc.top),
-      left: Math.min(boundingBox.left, acc.left),
-      bottom: Math.max(boundingBox.bottom, acc.bottom),
-      right: Math.max(boundingBox.right, acc.right)
-    }), { top, left, bottom, right });
-
-  }
-
-  /**
    * the an array of children that are found at (x, y)
    * @return {object} childrenAt all the children below the point
    * @param {number} x the x coordinate
    * @param {number} y the y coordinate
    */
   childrenAt(x: number, y: number) {
-    return this.children.filter((c) => c.pointIsInObject(x, y));
+    return this.children.filter((c) => c.isPointInPath(this.path, x, y));
   }
 
   /**
@@ -45,7 +26,7 @@ export default class Composition extends Component {
    */
   childAt(x: number, y: number) {
     //loop over the children in reverse because the last in the list is drawn on the top
-    return this.children.reverse().find((c) => c.pointIsInObject(x, y));
+    return this.children.reverse().find((c) => c.isPointInPath(this.path, x, y));
   }
 
   /**
@@ -83,11 +64,8 @@ export default class Composition extends Component {
    */
   render() {
     // required to make sure that the drawing occurs within the bounds of this composition
-    const boundingBox = this.boundingBox;
-    const offset: [number, number] = [-boundingBox.left, -boundingBox.top];
-
     for (const c of this.children) {
-      c.draw(this, offset);
+      c.draw(this, this.offset.scale(-1));
     }
 
     // `destination-out` will erase things

@@ -1,5 +1,18 @@
-import { Vector } from 'ts-matrix';
-import { IBoundingBox } from './bounding-box';
+import { Vector } from '../linear-algebra/vector';
+
+
+
+export interface ComponentOptions extends CanvasFillStrokeStyles, CanvasRenderingContext2DSettings, CanvasCompositing {
+  name?: string;
+  x?: number;
+  y?: number;
+  rotation?: number;
+  scale?: [number, number];
+  shear?: [number, number];
+  perspective?: [number, number];
+  reflect?: [number, number];
+  children?: Component[];
+}
 
 /**
  * The base class of things that may be drawn on the canvas.
@@ -13,16 +26,15 @@ export default abstract class Component extends OffscreenCanvas {
   /**
    * a uuid for the object
    */
-  readonly uuid: string = crypto.randomUUID();
-
+  readonly uuid = crypto.randomUUID();
   readonly context: OffscreenCanvasRenderingContext2D;
+  readonly path: Path2D = new Path2D();
 
-  private _boundingPath?: Path2D;
 
   /**
    * a name for the object 
    */
-  name: string = '';
+  name: string = `Component ${this.uuid}`;
 
   /**
    * theta θ 
@@ -65,10 +77,6 @@ export default abstract class Component extends OffscreenCanvas {
    */
   dirty: boolean = true;
 
-  /**
-   * d
-   */
-  dirtyPath: boolean = true;
 
   /**
    * the parent `Component`, or `null` if not attached or the scene composition `Component`
@@ -80,25 +88,24 @@ export default abstract class Component extends OffscreenCanvas {
    */
   children: Component[] = [];
 
-  abstract get boundingBox(): IBoundingBox;
-
-  get boundingPath(): Path2D {
-    if (this.dirtyPath || !this._boundingPath) {
-      this._boundingPath = new Path2D();
-    }
-    return this._boundingPath;
-  }
-
   /**
    * the render method should be implemented by subclasses
    */
   abstract render(): void;
 
-  constructor(width: number, height: number) {
+  constructor(width: number, height: number, options?: ComponentOptions) {
     super(width, height);
+    let [x, y] = [options?.x ?? 0, options?.y ?? 0];
+    this.displacement = new Vector([x, y]);
+    this.rotation = options?.rotation ?? 0;
+    this.scale = new Vector(options?.scale ?? [1, 1]);
+    this.shear = new Vector(options?.shear ?? [0, 0]);
+    this.reflect = new Vector(options?.reflect ?? [1, 1]);
+    this.perspective = new Vector(options?.perspective ?? [1, 1]);
+    this.children = options?.children ?? [];
     let context = this.getContext('2d');
     if (!context) {
-      throw new Error(`OffscreenCanvasRenderingContext2D could not be created for ${this.uuid}`);
+      throw new Error(`OffscreenCanvasRenderingContext2D could not be created for ${this.name}`);
     }
     this.context = context;
   }
@@ -108,7 +115,6 @@ export default abstract class Component extends OffscreenCanvas {
    * this is the sum of this object's displacement
    * and all of its ancestry. offset a 2D Vector
    * representing displacement from [0, 0]
-   * @type {Vector}
    */
   get offset(): Vector {
     return (this.parent ? this.displacement.add(this.parent.offset) : this.displacement);
@@ -116,32 +122,20 @@ export default abstract class Component extends OffscreenCanvas {
 
   /**
    * return the horizontal scale of the object - defaults to 1
-   * @type {number}
    */
   get scaleWidth() {
-    return this.scale.at(0);
+    return this.scale[0];
   }
-  /**
-   * set the horizontal scale of the object - defaults to 1
-   * @type {number}
-   */
+
   set scaleWidth(val) {
-    //this._scaleWidth = val;
-    this.scale.values = [val, this.scale.at(1)];
-    // this.needsRender = true;
-    // this.needsDraw = true;
-    // for (let c of this.children) {
-    //   c.needsRender = true;
-    //   c.needsDraw = true;
-    // }
+    this.scale = new Vector([val, this.scale[1]]);
   }
 
   /**
    * return the vertical scale of the object - defaults to 1
-   * @type {number}
    */
   get scaleHeight() {
-    return this.scale.at(1);
+    return this.scale[1];
   }
 
   /**
@@ -149,16 +143,8 @@ export default abstract class Component extends OffscreenCanvas {
    * @param {number} val the vertical scale
    */
   set scaleHeight(val) {
-    // this._scaleHeight = val;
-    this.scale.values = [this.scale.at(0), val];
-    // this.needsRender = true;
-    // this.needsDraw = true;
-    // for (let c of this.children) {
-    //   c.needsRender = true;
-    //   c.needsDraw = true;
-    // }
+    this.scale = new Vector([this.scale[0], val]);
   }
-
 
   /**
    * return the scale of the object, compounded with the parent object's scale
@@ -174,48 +160,26 @@ export default abstract class Component extends OffscreenCanvas {
    * @param component component to draw to
    * @param offset the offset on the canvas - optional, used for prerendering
    */
-  draw(component: Component, offset?: [number, number]) {
-    let boundingBox = this.boundingBox;
+  draw(component: Component, offset?: Vector) {
     if (this.dirty) {
       //clear any old rendering artifacts - they are no longer viable
-      component.context.clearRect(boundingBox.left, boundingBox.top, this.width, this.height);
+      component.context.clearRect(0, 0, this.width, this.height);
       this.render();
       this.dirty = false;
     }
 
     //offsets are for prerendering contexts of compositions
-    let x = boundingBox.left + (offset?.[0] ?? 0);
-    let y = boundingBox.top + (offset?.[1] ?? 0);
+    let x = offset?.[0] ?? 0;
+    let y = offset?.[1] ?? 0;
     component.context.drawImage(this, x, y, this.width, this.height);
   }
 
-  /**
-   * check whether the point specified lies *inside* this objects bounding box
-   *
-   * @param {number} x the x coordinate
-   * @param {number} y the y coordinate
-   * @return {boolean} whether the point is within the bounding box
-   */
-  pointIsInBoundingBox(x: number, y: number) {
-    let boundingBox = this.boundingBox;
-    return (
-      x > boundingBox.left &&
-      y > boundingBox.top &&
-      x < boundingBox.right &&
-      y < boundingBox.bottom
-    );
+  isPointInPath(...args: Parameters<typeof OffscreenCanvasRenderingContext2D.prototype.isPointInPath>) {
+    return () => this.context.isPointInPath(...args);
   }
 
-  /**
-   * check whether the point is within the object.
-   * this method should be overridden by subclassess
-   *
-   * @param {number} x the x coordinate
-   * @param {number} y the y coordinate
-   * @return {boolean} whether the point is in the object, as implemented by inheriting classes
-   */
-  pointIsInObject(x: number, y: number) {
-    return this.pointIsInBoundingBox(x, y);
+  isPointInStroke(...args: Parameters<typeof OffscreenCanvasRenderingContext2D.prototype.isPointInStroke>) {
+    return () => this.context.isPointInStroke(...args);
   }
 
   /**

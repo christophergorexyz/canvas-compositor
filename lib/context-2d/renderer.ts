@@ -1,4 +1,4 @@
-import { Vector } from 'ts-matrix';
+import { Vector } from '../linear-algebra/vector';
 
 /**
  * Draw a path, unclosed, with the given vertices
@@ -8,9 +8,9 @@ import { Vector } from 'ts-matrix';
  */
 export function drawPath(vertices: Vector[], context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
   context.beginPath();
-  context.moveTo(vertices[0].at(0), vertices[0].at(1));
+  context.moveTo(vertices[0][0], vertices[0][1]);
   for (let v = 1; v < vertices.length; v++) {
-    context.lineTo(vertices[v].at(0), vertices[v].at(1));
+    context.lineTo(vertices[v][0], vertices[v][1]);
   }
   context.stroke();
 }
@@ -23,9 +23,9 @@ export function drawPath(vertices: Vector[], context: CanvasRenderingContext2D |
  */
 export function drawPolygon(vertices: Vector[], context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
   context.beginPath();
-  context.moveTo(vertices[0].at(0), vertices[0].at(1));
+  context.moveTo(vertices[0][0], vertices[0][1]);
   for (let v = 1; v < vertices.length; v++) {
-    context.lineTo(vertices[v].at(0), vertices[v].at(1));
+    context.lineTo(vertices[v][0], vertices[v][1]);
   }
   context.closePath();
   context.stroke();
@@ -43,8 +43,8 @@ export function drawPolygon(vertices: Vector[], context: CanvasRenderingContext2
 export function drawBezier(start: Vector, end: Vector, c1: Vector, c2: Vector, context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
   //must `beginPath()` before `moveTo` to get correct starting position
   context.beginPath();
-  context.moveTo(start.at(0), start.at(1));
-  context.bezierCurveTo(c1.at(0), c1.at(1), c2.at(0), c2.at(1), end.at(0), end.at(1));
+  context.moveTo(start[0], start[1]);
+  context.bezierCurveTo(c1[0], c1[1], c2[0], c2[1], end[0], end[1]);
   context.stroke();
   context.closePath();
 }
@@ -59,7 +59,7 @@ export function drawBezier(start: Vector, end: Vector, c1: Vector, c2: Vector, c
  * @param {object} style the style options to be used when drawing the rectangle
  */
 export function drawRectangle(offset: Vector, size: Vector, context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
-  context.rect(offset.at(0), offset.at(1), size.at(0), size.at(1));
+  context.rect(offset[0], offset[1], size[0], size[1]);
   context.fill();
   context.stroke();
 }
@@ -75,7 +75,7 @@ export function drawRectangle(offset: Vector, size: Vector, context: CanvasRende
  * @param {object} style the style options to be used when drawing the ellipse
  */
 export function drawEllipse(center: Vector, radii: Vector, context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
-  context.ellipse(center.at(0), center.at(1), radii.at(0), radii.at(1) ?? radii.at(0), 0, 0, 2 * Math.PI);
+  context.ellipse(center[0], center[1], radii[0], radii[1] ?? radii[0], 0, 0, 2 * Math.PI);
   context.fill();
   context.stroke();
 }
