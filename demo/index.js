@@ -1,6 +1,6 @@
 const { Compositor, Components2d } = CanvasCompositor;
 
-const { Rectangle, Circle, Ellipse, Polygon, Composition, Bezier, Picture, Text, Line } = Components2d;
+const { Rectangle, Circle, Ellipse, Polygon, Composition, Bezier, Picture, Text, Line, Path } = Components2d;
 
 let fpsDebug = document.getElementById('fps');
 let mousexDebug = document.getElementById('mousex');
@@ -50,40 +50,28 @@ function configureRectangle(rect, options) {
   return rect;
 }
 
-const bgCard = configureRectangle(new Rectangle(240, 120), {
-  x: 60,
-  y: 60,
+const bgCard = configureRectangle(new Rectangle(260, 130), {
+  x: 40,
+  y: 70,
   fill: '#111827',
   stroke: '#60a5fa',
   lineWidth: 3,
-});
-
-const midCard = configureRectangle(new Rectangle(180, 140), {
-  x: 180,
-  y: 110,
-  fill: '#7c3aed',
-  stroke: '#22d3ee',
-  lineWidth: 2,
-});
-
-const topCard = configureRectangle(new Rectangle(140, 90), {
-  x: 420,
-  y: 90,
-  fill: '#f97316',
-  stroke: '#1f2937',
-  lineWidth: 4,
 });
 
 const circ = new Circle(50, { x: 130, y: 340 });
 circ.context.fillStyle = '#38bdf8';
 circ.context.strokeStyle = '#0f172a';
 circ.context.lineWidth = 3;
+circ.rotationOrigin = 'center';
+circ.rotation = Math.PI / 18;
 circ.invalidate();
 
 const ell = new Ellipse(70, 35, { x: 360, y: 300 });
 ell.context.fillStyle = '#a78bfa';
 ell.context.strokeStyle = '#312e81';
 ell.context.lineWidth = 3;
+ell.rotationOrigin = 'center';
+ell.rotation = -Math.PI / 9;
 ell.invalidate();
 
 const poly = new Polygon([
@@ -95,6 +83,8 @@ const poly = new Polygon([
 poly.context.fillStyle = '#34d399';
 poly.context.strokeStyle = '#064e3b';
 poly.context.lineWidth = 3;
+poly.rotationOrigin = 'center';
+poly.rotation = Math.PI / 14;
 poly.invalidate();
 
 const guideA = new Line([120, 410], [1, 0.16]);
@@ -102,17 +92,37 @@ const guideB = new Line([780, 410], [-1, 0.22]);
 const guideIntersection = Line.intersection(guideA, guideB);
 
 const curve = new Bezier({
-  start: [80, 500],
-  control1: [220, 390],
-  control2: [430, 580],
-  end: [560, 460],
-  x: 0,
-  y: 0,
+  start: [0, 80],
+  control1: [120, 220],
+  control2: [260, -80],
+  end: [380, 120],
+  x: 120,
+  y: 380,
 });
 curve.name = 'Bezier Curve';
-curve.context.strokeStyle = '#0ea5e9';
-curve.context.lineWidth = 4;
+curve.context.strokeStyle = '#ec4899';
+curve.context.lineWidth = 6;
+curve.rotationOrigin = 'center';
+curve.rotation = -Math.PI / 30;
 curve.invalidate();
+
+const openPath = new Path([
+  [590, 420],
+  [650, 380],
+  [710, 410],
+  [760, 360],
+  [790, 420],
+], {
+  x: 0,
+  y: 0,
+  closed: false,
+});
+openPath.name = 'Path';
+openPath.context.strokeStyle = '#be185d';
+openPath.context.lineWidth = 5;
+openPath.rotationOrigin = 'center';
+openPath.rotation = Math.PI / 20;
+openPath.invalidate();
 
 const spriteSource = document.createElement('canvas');
 spriteSource.width = 96;
@@ -141,6 +151,8 @@ picture.name = 'Picture';
 picture.context.strokeStyle = '#0f172a';
 picture.context.lineWidth = 2;
 picture.path.rect(0, 0, picture.width, picture.height);
+picture.rotation = -Math.PI / 16;
+picture.reflect = new picture.reflect.constructor([-1, 1]);
 picture.invalidate();
 
 const text = new Text({
@@ -156,34 +168,49 @@ text.context.fillStyle = '#0f172a';
 if (guideIntersection) {
   setDisplacement(text, Math.max(20, guideIntersection[0] - 120), Math.max(20, guideIntersection[1] - 260));
 }
+text.rotationOrigin = 'center';
+text.rotation = -Math.PI / 36;
 text.invalidate();
 
 const group = new Composition(260, 180, { x: 520, y: 320 });
 group.boundsMode = 'fixed';
-const groupRectA = configureRectangle(new Rectangle(160, 80), {
-  x: 20,
-  y: 20,
-  fill: '#10b981',
-  stroke: '#064e3b',
-  lineWidth: 3,
-});
-const groupRectB = configureRectangle(new Rectangle(110, 120), {
-  x: 90,
-  y: 40,
-  fill: '#f59e0b',
-  stroke: '#78350f',
-  lineWidth: 3,
-});
-
-const groupCircle = new Circle(28, { x: 170, y: 120 });
+const groupCircle = new Circle(30, { x: 58, y: 62 });
 groupCircle.context.fillStyle = '#fb7185';
 groupCircle.context.strokeStyle = '#881337';
 groupCircle.context.lineWidth = 3;
+groupCircle.rotationOrigin = 'center';
+groupCircle.rotation = Math.PI / 10;
 groupCircle.invalidate();
 
-group.addChildren([groupRectA, groupRectB, groupCircle]);
+const groupEllipse = new Ellipse(44, 22, { x: 150, y: 64 });
+groupEllipse.context.fillStyle = '#fcd34d';
+groupEllipse.context.strokeStyle = '#78350f';
+groupEllipse.context.lineWidth = 3;
+groupEllipse.rotationOrigin = 'center';
+groupEllipse.rotation = -Math.PI / 8;
+groupEllipse.invalidate();
 
-_myCC.scene.addChildren([bgCard, midCard, topCard, circ, ell, poly, curve, picture, text, group]);
+const groupPath = new Path([
+  [14, 132],
+  [70, 102],
+  [122, 146],
+  [176, 110],
+  [228, 144],
+], {
+  x: 0,
+  y: 0,
+  closed: false,
+});
+groupPath.name = 'Group Path';
+groupPath.context.strokeStyle = '#2563eb';
+groupPath.context.lineWidth = 4;
+groupPath.rotationOrigin = 'center';
+groupPath.rotation = Math.PI / 24;
+groupPath.invalidate();
+
+group.addChildren([groupCircle, groupEllipse, groupPath]);
+
+_myCC.scene.addChildren([bgCard, circ, ell, poly, curve, openPath, picture, text, group]);
 _myCC.scene.boundsMode = 'fixed';
 
 let selectedComponent = null;
@@ -256,7 +283,10 @@ function hitTestComposition(composition, x, y) {
       if (nested) return nested;
     }
 
-    if (child.isPointInPath(child.path, untransformed.x, untransformed.y)) {
+    if (
+      child.isPointInPath(child.path, untransformed.x, untransformed.y)
+      || child.isPointInStroke(child.path, untransformed.x, untransformed.y)
+    ) {
       return child;
     }
   }

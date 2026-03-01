@@ -87,8 +87,8 @@ export class Vector extends Array<number> {
 
   @sameLength()
   static subtract(...args: VectorOperationArgument[]) {
-    const length = args[0].length;
-    return new Vector(args.reduce((acc, val) => acc.map((v, i) => v - val[i]), new Array(length).fill(0)));
+    const [first, ...rest] = args;
+    return new Vector(rest.reduce((acc, val) => acc.map((entry, index) => entry - val[index]), Array.from(first)));
   }
 
   cross(v: VectorOperationArgument) {

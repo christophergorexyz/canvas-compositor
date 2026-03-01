@@ -102,6 +102,16 @@ export default class Bezier extends Component {
   }
 
   render() {
-    this.context.stroke(this.path);
+    this.context.beginPath();
+    this.context.moveTo(this.start[0], this.start[1]);
+    this.context.bezierCurveTo(
+      this.control1[0],
+      this.control1[1],
+      this.control2[0],
+      this.control2[1],
+      this.end[0],
+      this.end[1],
+    );
+    this.context.stroke();
   }
 }
