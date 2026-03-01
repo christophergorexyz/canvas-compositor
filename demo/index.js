@@ -283,9 +283,13 @@ function hitTestComposition(composition, x, y) {
       if (nested) return nested;
     }
 
+    const rasterPadding = child.effectiveRasterPadding ?? 0;
+    const hitX = untransformed.x - rasterPadding;
+    const hitY = untransformed.y - rasterPadding;
+
     if (
-      child.isPointInPath(child.path, untransformed.x, untransformed.y)
-      || child.isPointInStroke(child.path, untransformed.x, untransformed.y)
+      child.isPointInPath(child.path, hitX, hitY)
+      || child.isPointInStroke(child.path, hitX, hitY)
     ) {
       return child;
     }

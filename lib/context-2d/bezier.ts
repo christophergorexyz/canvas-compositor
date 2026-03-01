@@ -79,6 +79,7 @@ export default class Bezier extends Component {
 
     super(width, height, {
       ...options,
+      rasterPadding: options.rasterPadding,
       x: options.x ?? minX,
       y: options.y ?? minY,
     });

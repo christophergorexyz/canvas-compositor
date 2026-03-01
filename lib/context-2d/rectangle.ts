@@ -1,5 +1,4 @@
 import Component, { ComponentOptions } from './component';
-import { Vector } from '../linear-algebra/vector';
 
 /**
  * A rectangle

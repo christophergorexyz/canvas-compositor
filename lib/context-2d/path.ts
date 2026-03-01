@@ -24,15 +24,16 @@ export default class Path extends Component {
 
 		const width = Math.max(1, max[0] - min[0]);
 		const height = Math.max(1, max[1] - min[1]);
+		const { closed, ...componentOptions } = options ?? ({} as PathOptions);
 
-		super(width, height, options);
+		super(width, height, {
+			...componentOptions,
+			rasterPadding: componentOptions.rasterPadding,
+			x: componentOptions.x ?? min[0],
+			y: componentOptions.y ?? min[1],
+		});
 
-		this.displacement = new Vector([
-			options?.x ?? min[0],
-			options?.y ?? min[1],
-		]);
-
-		this.closed = Boolean(options?.closed);
+		this.closed = Boolean(closed);
 		this.points = vectors.map((point) => new Vector([
 			point[0] - min[0],
 			point[1] - min[1],
