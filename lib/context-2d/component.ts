@@ -40,37 +40,37 @@ export default abstract class Component extends OffscreenCanvas {
    * theta θ 
    * the angle of rotation 
    */
-  rotation: number = 0;
+  private _rotation: number = 0;
 
   /**
    * delta δ
    * the displacement from the origin
    */
-  displacement: Vector = new Vector([0, 0]);
+  private _displacement: Vector = new Vector([0, 0]);
 
   /**
    * scale 
    * these values should always be >= 0 
    */
-  scale: Vector = new Vector([1, 1]);
+  private _scale: Vector = new Vector([1, 1]);
 
   /**
    * beta β
    * shear
    */
-  shear: Vector = new Vector([0, 0]);
+  private _shear: Vector = new Vector([0, 0]);
 
   /**
    * pi π
    * perspective
    */
-  perspective: Vector = new Vector([1, 1]);
+  private _perspective: Vector = new Vector([1, 1]);
 
   /**
    * reflect across axis
    * these values should always be 1 or -1
    */
-  reflect: Vector = new Vector([1, 1]);
+  private _reflect: Vector = new Vector([1, 1]);
 
   /**
    * a dirty bit to ensure we render when necessary
@@ -103,11 +103,74 @@ export default abstract class Component extends OffscreenCanvas {
     this.reflect = new Vector(options?.reflect ?? [1, 1]);
     this.perspective = new Vector(options?.perspective ?? [1, 1]);
     this.children = options?.children ?? [];
+    this.children.forEach((child) => child.parent = this);
     let context = this.getContext('2d');
     if (!context) {
       throw new Error(`OffscreenCanvasRenderingContext2D could not be created for ${this.name}`);
     }
     this.context = context;
+  }
+
+  get rotation(): number {
+    return this._rotation;
+  }
+
+  set rotation(value: number) {
+    this._rotation = value;
+    this.invalidate();
+  }
+
+  get displacement(): Vector {
+    return this._displacement;
+  }
+
+  set displacement(value: Vector) {
+    this._displacement = value;
+    this.invalidate();
+  }
+
+  get scale(): Vector {
+    return this._scale;
+  }
+
+  set scale(value: Vector) {
+    this._scale = value;
+    this.invalidate();
+  }
+
+  get shear(): Vector {
+    return this._shear;
+  }
+
+  set shear(value: Vector) {
+    this._shear = value;
+    this.invalidate();
+  }
+
+  get perspective(): Vector {
+    return this._perspective;
+  }
+
+  set perspective(value: Vector) {
+    this._perspective = value;
+    this.invalidate();
+  }
+
+  get reflect(): Vector {
+    return this._reflect;
+  }
+
+  set reflect(value: Vector) {
+    this._reflect = value;
+    this.invalidate();
+  }
+
+  /**
+   * mark this component as dirty and propagate to all ancestors
+   */
+  invalidate() {
+    this.dirty = true;
+    this.parent?.invalidate();
   }
 
   /**
@@ -163,7 +226,7 @@ export default abstract class Component extends OffscreenCanvas {
   draw(component: Component, offset?: Vector) {
     if (this.dirty) {
       //clear any old rendering artifacts - they are no longer viable
-      component.context.clearRect(0, 0, this.width, this.height);
+      this.context.clearRect(0, 0, this.width, this.height);
       this.render();
       this.dirty = false;
     }
@@ -175,11 +238,11 @@ export default abstract class Component extends OffscreenCanvas {
   }
 
   isPointInPath(...args: Parameters<typeof OffscreenCanvasRenderingContext2D.prototype.isPointInPath>) {
-    return () => this.context.isPointInPath(...args);
+    return this.context.isPointInPath(...args);
   }
 
   isPointInStroke(...args: Parameters<typeof OffscreenCanvasRenderingContext2D.prototype.isPointInStroke>) {
-    return () => this.context.isPointInStroke(...args);
+    return this.context.isPointInStroke(...args);
   }
 
   /**
@@ -191,7 +254,7 @@ export default abstract class Component extends OffscreenCanvas {
       if (index >= 0) {
         this.parent.children.splice(index, 1);
         this.parent.children.splice(this.parent.children.length, 0, this);
-        // this.needsDraw = true;
+        this.parent.invalidate();
       }
     }
   }
@@ -205,7 +268,7 @@ export default abstract class Component extends OffscreenCanvas {
       if (index >= 0) {
         this.parent.children.splice(index, 1);
         this.parent.children.splice(0, 0, this);
-        // this.needsDraw = true;
+        this.parent.invalidate();
       }
     }
   }
@@ -221,9 +284,7 @@ export default abstract class Component extends OffscreenCanvas {
       if (index >= 0 && index < this.parent.children.length - 1) {
         this.parent.children.splice(index, 1);
         this.parent.children.splice(index + 1, 0, this); //if index + 1 > siblings.length, inserts it at end
-        // this.parent.UpdateChildrenLists();
-        // this.needsRender = true;
-        // this.needsDraw = true;
+        this.parent.invalidate();
       }
     }
   }
@@ -237,9 +298,7 @@ export default abstract class Component extends OffscreenCanvas {
       if (index > 0) {
         this.parent.children.splice(index, 1);
         this.parent.children.splice(index - 1, 0, this);
-        // this.parent.UpdateChildrenLists();
-        // this.needsRender = true;
-        // this.needsDraw = true;
+        this.parent.invalidate();
       }
     }
   }
