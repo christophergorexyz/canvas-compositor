@@ -1,5 +1,6 @@
 import { Vector } from '../linear-algebra/vector';
 
+export type RotationOrigin = 'origin' | 'center' | [number, number];
 
 
 export interface ComponentOptions extends CanvasFillStrokeStyles, CanvasRenderingContext2DSettings, CanvasCompositing {
@@ -11,6 +12,7 @@ export interface ComponentOptions extends CanvasFillStrokeStyles, CanvasRenderin
   shear?: [number, number];
   perspective?: [number, number];
   reflect?: [number, number];
+  rotationOrigin?: RotationOrigin;
   children?: Component[];
 }
 
@@ -32,15 +34,16 @@ export default abstract class Component extends OffscreenCanvas {
 
 
   /**
-   * a name for the object 
+   * a name for the object
    */
   name: string = `Component ${this.uuid}`;
 
   /**
-   * theta θ 
-   * the angle of rotation 
+   * theta θ
+   * the angle of rotation
    */
   private _rotation: number = 0;
+  private _rotationOrigin: RotationOrigin = 'origin';
 
   /**
    * delta δ
@@ -49,8 +52,8 @@ export default abstract class Component extends OffscreenCanvas {
   private _displacement: Vector = new Vector([0, 0]);
 
   /**
-   * scale 
-   * these values should always be >= 0 
+   * scale
+   * these values should always be >= 0
    */
   private _scale: Vector = new Vector([1, 1]);
 
@@ -98,6 +101,7 @@ export default abstract class Component extends OffscreenCanvas {
     let [x, y] = [options?.x ?? 0, options?.y ?? 0];
     this.displacement = new Vector([x, y]);
     this.rotation = options?.rotation ?? 0;
+    this.rotationOrigin = options?.rotationOrigin ?? 'origin';
     this.scale = new Vector(options?.scale ?? [1, 1]);
     this.shear = new Vector(options?.shear ?? [0, 0]);
     this.reflect = new Vector(options?.reflect ?? [1, 1]);
@@ -118,6 +122,27 @@ export default abstract class Component extends OffscreenCanvas {
   set rotation(value: number) {
     this._rotation = value;
     this.invalidate();
+  }
+
+  get rotationOrigin(): RotationOrigin {
+    return this._rotationOrigin;
+  }
+
+  set rotationOrigin(value: RotationOrigin) {
+    this._rotationOrigin = value;
+    this.invalidate();
+  }
+
+  get rotationPivot(): Vector {
+    if (this.rotationOrigin === 'center') {
+      return new Vector([this.width / 2, this.height / 2]);
+    }
+
+    if (this.rotationOrigin === 'origin') {
+      return new Vector([0, 0]);
+    }
+
+    return new Vector(this.rotationOrigin);
   }
 
   get displacement(): Vector {
@@ -234,7 +259,27 @@ export default abstract class Component extends OffscreenCanvas {
     //offsets are for prerendering contexts of compositions
     let x = offset?.[0] ?? 0;
     let y = offset?.[1] ?? 0;
-    component.context.drawImage(this, x, y, this.width, this.height);
+
+    const rotation = this.rotation;
+    const reflectX = this.reflect[0] < 0 ? -1 : 1;
+    const reflectY = this.reflect[1] < 0 ? -1 : 1;
+    const pivot = this.rotationPivot;
+
+    if (rotation === 0 && reflectX === 1 && reflectY === 1) {
+      component.context.drawImage(this, x, y, this.width, this.height);
+      return;
+    }
+
+    component.context.save();
+    component.context.translate(
+      x + pivot[0],
+      y + pivot[1],
+    );
+    component.context.rotate(rotation);
+    component.context.scale(reflectX, reflectY);
+    component.context.translate(-pivot[0], -pivot[1]);
+    component.context.drawImage(this, 0, 0, this.width, this.height);
+    component.context.restore();
   }
 
   isPointInPath(...args: Parameters<typeof OffscreenCanvasRenderingContext2D.prototype.isPointInPath>) {

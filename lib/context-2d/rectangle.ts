@@ -6,9 +6,9 @@ import { Vector } from '../linear-algebra/vector';
  */
 export default class Rectangle extends Component {
   constructor(width: number, height = width, options?: ComponentOptions) {
-    super(width, height);
+    super(width, height, options);
 
-    this.path.rect(this.displacement[0], this.displacement[1], width, height);
+    this.path.rect(0, 0, width, height);
   }
 
   /**

@@ -1,4 +1,11 @@
-import Component from './component';
+import { Vector } from '../linear-algebra/vector';
+import Component, { ComponentOptions } from './component';
+
+export type CompositionBoundsMode = 'fixed' | 'auto-expand';
+
+export interface CompositionOptions extends ComponentOptions {
+  boundsMode?: CompositionBoundsMode;
+}
 
 /**
  * The Composition class is an extension of the Primitive that is
@@ -10,6 +17,70 @@ import Component from './component';
  * and transatively, all of their children.
  */
 export default class Composition extends Component {
+  boundsMode: CompositionBoundsMode = 'fixed';
+  autoResizeTargetCanvas: boolean = false;
+
+  private _contentOffset: Vector = new Vector([0, 0]);
+
+  constructor(width: number, height: number, options?: CompositionOptions) {
+    super(width, height, options);
+    this.boundsMode = options?.boundsMode ?? 'fixed';
+  }
+
+  get contentOffset(): Vector {
+    return this._contentOffset;
+  }
+
+  private _childRenderOffset(child: Component): Vector {
+    if (child instanceof Composition) {
+      return child.contentOffset;
+    }
+
+    return new Vector([0, 0]);
+  }
+
+  private _updateBoundsForChildren() {
+    if (this.boundsMode !== 'auto-expand' || this.children.length === 0) {
+      this._contentOffset = new Vector([0, 0]);
+      return;
+    }
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const child of this.children) {
+      const childRenderOffset = this._childRenderOffset(child);
+      const left = child.displacement[0] + childRenderOffset[0];
+      const top = child.displacement[1] + childRenderOffset[1];
+      const right = left + child.width;
+      const bottom = top + child.height;
+
+      minX = Math.min(minX, left);
+      minY = Math.min(minY, top);
+      maxX = Math.max(maxX, right);
+      maxY = Math.max(maxY, bottom);
+    }
+
+    if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) {
+      this._contentOffset = new Vector([0, 0]);
+      return;
+    }
+
+    const nextWidth = Math.max(1, Math.ceil(maxX - minX));
+    const nextHeight = Math.max(1, Math.ceil(maxY - minY));
+
+    if (this.width !== nextWidth) {
+      this.width = nextWidth;
+    }
+
+    if (this.height !== nextHeight) {
+      this.height = nextHeight;
+    }
+
+    this._contentOffset = new Vector([minX, minY]);
+  }
 
   /**
    * the an array of children that are found at (x, y)
@@ -18,7 +89,34 @@ export default class Composition extends Component {
    * @param {number} y the y coordinate
    */
   childrenAt(x: number, y: number) {
-    return this.children.filter((c) => c.isPointInPath(this.path, x, y));
+    return this.children.filter((child) => {
+      const childRenderOffset = this._childRenderOffset(child);
+      let localX = x - child.displacement[0] + this._contentOffset[0] - childRenderOffset[0];
+      let localY = y - child.displacement[1] + this._contentOffset[1] - childRenderOffset[1];
+
+      const pivot = child.rotationPivot;
+      const tx = localX - pivot[0];
+      const ty = localY - pivot[1];
+
+      const c = Math.cos(child.rotation);
+      const s = Math.sin(child.rotation);
+
+      let ux = tx * c + ty * s;
+      let uy = -tx * s + ty * c;
+
+      if (child.reflect[0] < 0) {
+        ux = -ux;
+      }
+
+      if (child.reflect[1] < 0) {
+        uy = -uy;
+      }
+
+      localX = ux + pivot[0];
+      localY = uy + pivot[1];
+
+      return child.isPointInPath(child.path, localX, localY);
+    });
   }
 
   /**
@@ -26,7 +124,50 @@ export default class Composition extends Component {
    */
   childAt(x: number, y: number) {
     //loop over the children in reverse because the last in the list is drawn on the top
-    return [...this.children].reverse().find((c) => c.isPointInPath(this.path, x, y));
+    return [...this.children].reverse().find((child) => {
+      const childRenderOffset = this._childRenderOffset(child);
+      let localX = x - child.displacement[0] + this._contentOffset[0] - childRenderOffset[0];
+      let localY = y - child.displacement[1] + this._contentOffset[1] - childRenderOffset[1];
+
+      const pivot = child.rotationPivot;
+      const tx = localX - pivot[0];
+      const ty = localY - pivot[1];
+
+      const c = Math.cos(child.rotation);
+      const s = Math.sin(child.rotation);
+
+      let ux = tx * c + ty * s;
+      let uy = -tx * s + ty * c;
+
+      if (child.reflect[0] < 0) {
+        ux = -ux;
+      }
+
+      if (child.reflect[1] < 0) {
+        uy = -uy;
+      }
+
+      localX = ux + pivot[0];
+      localY = uy + pivot[1];
+
+      return child.isPointInPath(child.path, localX, localY);
+    });
+  }
+
+  draw(component: Component, offset?: Vector) {
+    if (this.dirty) {
+      this.context.clearRect(0, 0, this.width, this.height);
+      this.render();
+      this.dirty = false;
+    }
+
+    if (component === this) {
+      return;
+    }
+
+    const x = (offset?.[0] ?? 0) + this._contentOffset[0];
+    const y = (offset?.[1] ?? 0) + this._contentOffset[1];
+    component.context.drawImage(this, x, y, this.width, this.height);
   }
 
   /**
@@ -72,9 +213,15 @@ export default class Composition extends Component {
    * @override
    */
   render() {
+    this._updateBoundsForChildren();
+
     // required to make sure that the drawing occurs within the bounds of this composition
     for (const c of this.children) {
-      c.draw(this, this.offset.scale(-1));
+      const drawOffset = new Vector([
+        c.displacement[0] - this._contentOffset[0],
+        c.displacement[1] - this._contentOffset[1],
+      ]);
+      c.draw(this, drawOffset);
     }
 
     // `destination-out` will erase things

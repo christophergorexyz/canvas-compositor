@@ -13,13 +13,60 @@
 </head>
 
 <body>
-  <canvas id="test-canvas" width="800" height="600" style="margin-top: 20px">
-    <rectangle x="150" y="300" w="100" h="50">Blah</rectangle>
-    <circle x="350" y="100" r="30"></circle>
-  </canvas>
+  <div id="controls">
+    <button id="bring-front">Bring to front</button>
+    <button id="bring-forward">Bring forward</button>
+    <button id="send-backward">Send backward</button>
+    <button id="send-back">Send to back</button>
+    <label style="margin-left: 12px;">
+      <input type="checkbox" id="group-auto-expand" />
+      Group auto-expand bounds
+    </label>
+    <label style="margin-left: 12px;">
+      <input type="checkbox" id="scene-auto-resize" />
+      Auto-resize root canvas
+    </label>
+    <label style="margin-left: 12px;">
+      <input type="checkbox" id="draw-bounds" />
+      Draw bounds
+    </label>
+    <span style="margin-left: 12px;">Selected: <strong id="selected">(none)</strong></span>
+  </div>
+  <div id="transform-controls" style="margin-top: 8px;">
+    <strong>Transforms</strong>
+    <button id="move-left">←</button>
+    <button id="move-up">↑</button>
+    <button id="move-down">↓</button>
+    <button id="move-right">→</button>
+    <button id="snap-grid">Snap 10px</button>
+    <button id="rotate-ccw">Rotate around parent -15°</button>
+    <button id="rotate-cw">Rotate around parent +15°</button>
+    <label style="margin-left: 8px;">
+      Self rotate pivot
+      <select id="self-rotate-pivot">
+        <option value="center">center</option>
+        <option value="origin">origin</option>
+      </select>
+    </label>
+    <button id="self-rotate-ccw">Rotate self -15°</button>
+    <button id="self-rotate-cw">Rotate self +15°</button>
+    <button id="scale-in">Scale around parent 0.9x</button>
+    <button id="scale-out">Scale around parent 1.1x</button>
+    <button id="mirror-x">Mirror X</button>
+    <button id="mirror-y">Mirror Y</button>
+  </div>
+  <div style="position: relative; display: inline-block; margin-top: 20px;">
+    <canvas id="test-canvas" width="800" height="600" style="display: block;">
+      <rectangle x="150" y="300" w="100" h="50">Blah</rectangle>
+      <circle x="350" y="100" r="30"></circle>
+    </canvas>
+    <canvas id="debug-canvas" width="800" height="600"
+      style="position: absolute; inset: 0; pointer-events: none;"></canvas>
+  </div>
   <div id="canvas-debug">
     FPS <span id="fps"></span> X: <span id="mousex"></span> Y:
-    <span id="mousey"></span>
+    <span id="mousey"></span> Canvas:
+    <span id="canvas-size"></span>
   </div>
   <script src="../dist/canvas-compositor.min.js"></script>
   <script src="../demo/index.js"></script>

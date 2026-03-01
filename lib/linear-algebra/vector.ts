@@ -1,15 +1,22 @@
-import { sameLength, argsHaveLength } from "../decorators/vectors";
+import { argsHaveLength, sameLength } from "../decorators/vectors";
 
 type VectorOperationArgument = number[] | Vector;
 
-
+export function isVector(arg: unknown): arg is Vector {
+  return arg instanceof Vector;
+}
 
 export class Vector extends Array<number> {
-  constructor(data: number[]) {
+  constructor(data: number[] | number = 0) {
+    if (typeof data === 'number') {
+      super(data);
+      return;
+    }
+
     super(...data);
   }
 
-  // math and physics operations 
+  // math and physics operations
   add(...args: VectorOperationArgument[]) {
     return Vector.add(this, ...args);
   };
@@ -26,8 +33,8 @@ export class Vector extends Array<number> {
 
   /**
    * entry-wise multiplication of vectors, i.e., hadamard product
-   * @param args 
-   * @returns 
+   * @param args
+   * @returns
    */
   @sameLength()
   static multiply(...args: VectorOperationArgument[]) {
@@ -40,12 +47,12 @@ export class Vector extends Array<number> {
   };
 
   static scale(v: VectorOperationArgument, s: number) {
-    v = (v instanceof Vector) ? v : new Vector(v);
+    if(!isVector(v)) v = new Vector(v);
     return new Vector(v.map((val) => val * s));
   };
 
   /**
-   * @todo verify that the parameters read the way order of operations would suggest 
+   * @todo verify that the parameters read the way order of operations would suggest
    */
   dot(v: VectorOperationArgument) {
     return Vector.dot(this, v);
@@ -90,7 +97,11 @@ export class Vector extends Array<number> {
 
   @argsHaveLength(3)
   static cross(v1: VectorOperationArgument, v2: VectorOperationArgument) {
-    return new Vector([v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]]);
+    return new Vector([
+      v1[1] * v2[2] - v1[2] * v2[1],
+      v1[2] * v2[0] - v1[0] * v2[2],
+      v1[0] * v2[1] - v1[1] * v2[0]
+    ]);
   };
 
   distance(v: VectorOperationArgument) {
@@ -146,7 +157,7 @@ export class Vector extends Array<number> {
   // utility functions
 
   /**
-   * 
+   *
    * @param args vectors to compare
    * @returns  the minimum and maximum values of the input vectors, respectively
    */
