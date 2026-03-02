@@ -11,5 +11,6 @@ export { default as Rectangle } from './rectangle';
 export { default as Text } from './text';
 export * as TextDefaults from './text-defaults';
 export * as TextUtilities from './text-utilities';
+export * as TransformUtils from './transform-utils';
 
 

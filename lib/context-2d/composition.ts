@@ -1,5 +1,6 @@
 import { Vector } from '../linear-algebra/vector';
 import Component, { ComponentOptions } from './component';
+import { hitTestComponent, inverseTransformPoint, localPointForChild } from './transform-utils';
 
 export type CompositionBoundsMode = 'fixed' | 'auto-expand';
 
@@ -90,33 +91,10 @@ export default class Composition extends Component {
    */
   childrenAt(x: number, y: number) {
     return this.children.filter((child) => {
-      const childRenderOffset = this._childRenderOffset(child);
-      let localX = x - child.displacement[0] + this._contentOffset[0] - childRenderOffset[0];
-      let localY = y - child.displacement[1] + this._contentOffset[1] - childRenderOffset[1];
+      const localPoint = localPointForChild(this, child, x, y);
+      const untransformed = inverseTransformPoint(child, localPoint.x, localPoint.y);
 
-      const pivot = child.rotationPivot;
-      const tx = localX - pivot[0];
-      const ty = localY - pivot[1];
-
-      const c = Math.cos(child.rotation);
-      const s = Math.sin(child.rotation);
-
-      let ux = tx * c + ty * s;
-      let uy = -tx * s + ty * c;
-
-      if (child.reflect[0] < 0) {
-        ux = -ux;
-      }
-
-      if (child.reflect[1] < 0) {
-        uy = -uy;
-      }
-
-      localX = ux + pivot[0];
-      localY = uy + pivot[1];
-
-      return child.isPointInPath(child.path, localX, localY)
-        || child.isPointInStroke(child.path, localX, localY);
+      return hitTestComponent(child, untransformed.x, untransformed.y, true);
     });
   }
 
@@ -126,33 +104,10 @@ export default class Composition extends Component {
   childAt(x: number, y: number) {
     //loop over the children in reverse because the last in the list is drawn on the top
     return [...this.children].reverse().find((child) => {
-      const childRenderOffset = this._childRenderOffset(child);
-      let localX = x - child.displacement[0] + this._contentOffset[0] - childRenderOffset[0];
-      let localY = y - child.displacement[1] + this._contentOffset[1] - childRenderOffset[1];
+      const localPoint = localPointForChild(this, child, x, y);
+      const untransformed = inverseTransformPoint(child, localPoint.x, localPoint.y);
 
-      const pivot = child.rotationPivot;
-      const tx = localX - pivot[0];
-      const ty = localY - pivot[1];
-
-      const c = Math.cos(child.rotation);
-      const s = Math.sin(child.rotation);
-
-      let ux = tx * c + ty * s;
-      let uy = -tx * s + ty * c;
-
-      if (child.reflect[0] < 0) {
-        ux = -ux;
-      }
-
-      if (child.reflect[1] < 0) {
-        uy = -uy;
-      }
-
-      localX = ux + pivot[0];
-      localY = uy + pivot[1];
-
-      return child.isPointInPath(child.path, localX, localY)
-        || child.isPointInStroke(child.path, localX, localY);
+      return hitTestComponent(child, untransformed.x, untransformed.y, true);
     });
   }
 
