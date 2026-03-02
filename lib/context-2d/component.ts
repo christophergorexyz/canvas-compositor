@@ -109,7 +109,7 @@ export default abstract class Component extends OffscreenCanvas {
     this._contentWidth = width;
     this._contentHeight = height;
     let [x, y] = [options?.x ?? 0, options?.y ?? 0];
-    this.displacement = new Vector([x - rasterPadding, y - rasterPadding]);
+    this.displacement = new Vector([x, y]);
     this.rotation = options?.rotation ?? 0;
     this.rotationOrigin = options?.rotationOrigin ?? 'origin';
     this.scale = new Vector(options?.scale ?? [1, 1]);
@@ -144,15 +144,23 @@ export default abstract class Component extends OffscreenCanvas {
   }
 
   get rotationPivot(): Vector {
+    const padding = this.effectiveRasterPadding;
+
     if (this.rotationOrigin === 'center') {
-      return new Vector([this.width / 2, this.height / 2]);
+      return new Vector([
+        padding + (this._contentWidth / 2),
+        padding + (this._contentHeight / 2),
+      ]);
     }
 
     if (this.rotationOrigin === 'origin') {
-      return new Vector([0, 0]);
+      return new Vector([padding, padding]);
     }
 
-    return new Vector(this.rotationOrigin);
+    return new Vector([
+      this.rotationOrigin[0] + padding,
+      this.rotationOrigin[1] + padding,
+    ]);
   }
 
   get displacement(): Vector {
@@ -307,7 +315,6 @@ export default abstract class Component extends OffscreenCanvas {
       imageSmoothingQuality: this.context.imageSmoothingQuality,
     };
 
-    const delta = nextPadding - this._effectiveRasterPadding;
     this._effectiveRasterPadding = nextPadding;
     this.width = this._contentWidth + (2 * nextPadding);
     this.height = this._contentHeight + (2 * nextPadding);
@@ -332,10 +339,6 @@ export default abstract class Component extends OffscreenCanvas {
     this.context.direction = preservedState.direction;
     this.context.imageSmoothingEnabled = preservedState.imageSmoothingEnabled;
     this.context.imageSmoothingQuality = preservedState.imageSmoothingQuality;
-    this._displacement = new Vector([
-      this._displacement[0] - delta,
-      this._displacement[1] - delta,
-    ]);
   }
 
   /**
@@ -361,8 +364,8 @@ export default abstract class Component extends OffscreenCanvas {
     }
 
     //offsets are for prerendering contexts of compositions
-    let x = offset?.[0] ?? 0;
-    let y = offset?.[1] ?? 0;
+    let x = (offset?.[0] ?? 0) - this.effectiveRasterPadding;
+    let y = (offset?.[1] ?? 0) - this.effectiveRasterPadding;
 
     const rotation = this.rotation;
     const reflectX = this.reflect[0] < 0 ? -1 : 1;

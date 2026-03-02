@@ -115,12 +115,6 @@ export default class Composition extends Component {
       localX = ux + pivot[0];
       localY = uy + pivot[1];
 
-      const rasterPadding = child.effectiveRasterPadding;
-      if (rasterPadding > 0) {
-        localX -= rasterPadding;
-        localY -= rasterPadding;
-      }
-
       return child.isPointInPath(child.path, localX, localY)
         || child.isPointInStroke(child.path, localX, localY);
     });
@@ -156,12 +150,6 @@ export default class Composition extends Component {
 
       localX = ux + pivot[0];
       localY = uy + pivot[1];
-
-      const rasterPadding = child.effectiveRasterPadding;
-      if (rasterPadding > 0) {
-        localX -= rasterPadding;
-        localY -= rasterPadding;
-      }
 
       return child.isPointInPath(child.path, localX, localY)
         || child.isPointInStroke(child.path, localX, localY);

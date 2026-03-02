@@ -14,7 +14,8 @@ let sendBackwardButton = document.getElementById('send-backward');
 let sendBackButton = document.getElementById('send-back');
 let groupAutoExpandCheckbox = document.getElementById('group-auto-expand');
 let sceneAutoResizeCheckbox = document.getElementById('scene-auto-resize');
-let drawBoundsCheckbox = document.getElementById('draw-bounds');
+let drawLogicalBoundsCheckbox = document.getElementById('draw-logical-bounds');
+let drawRasterBoundsCheckbox = document.getElementById('draw-raster-bounds');
 
 let moveLeftButton = document.getElementById('move-left');
 let moveUpButton = document.getElementById('move-up');
@@ -283,13 +284,9 @@ function hitTestComposition(composition, x, y) {
       if (nested) return nested;
     }
 
-    const rasterPadding = child.effectiveRasterPadding ?? 0;
-    const hitX = untransformed.x - rasterPadding;
-    const hitY = untransformed.y - rasterPadding;
-
     if (
-      child.isPointInPath(child.path, hitX, hitY)
-      || child.isPointInStroke(child.path, hitX, hitY)
+      child.isPointInPath(child.path, untransformed.x, untransformed.y)
+      || child.isPointInStroke(child.path, untransformed.x, untransformed.y)
     ) {
       return child;
     }
@@ -505,18 +502,40 @@ function applySceneResizeSetting(isAutoResize) {
   _myCC.scene.invalidate();
 }
 
-function drawComponentBounds(component, boxX = 0, boxY = 0, drawFn = null) {
-  const topLeft = forwardComponentTransform(component, 0, 0);
-  const topRight = forwardComponentTransform(component, component.width, 0);
-  const bottomRight = forwardComponentTransform(component, component.width, component.height);
-  const bottomLeft = forwardComponentTransform(component, 0, component.height);
+function getBoundsQuad(component, boxX = 0, boxY = 0, mode = 'logical') {
+  const padding = component.effectiveRasterPadding ?? 0;
+  const originX = boxX - padding;
+  const originY = boxY - padding;
+  const left = mode === 'logical' ? padding : 0;
+  const top = mode === 'logical' ? padding : 0;
+  const right = mode === 'logical' ? component.width - padding : component.width;
+  const bottom = mode === 'logical' ? component.height - padding : component.height;
 
-  const quad = [
-    { x: boxX + topLeft.x, y: boxY + topLeft.y },
-    { x: boxX + topRight.x, y: boxY + topRight.y },
-    { x: boxX + bottomRight.x, y: boxY + bottomRight.y },
-    { x: boxX + bottomLeft.x, y: boxY + bottomLeft.y },
+  const topLeft = forwardComponentTransform(component, left, top);
+  const topRight = forwardComponentTransform(component, right, top);
+  const bottomRight = forwardComponentTransform(component, right, bottom);
+  const bottomLeft = forwardComponentTransform(component, left, bottom);
+
+  return [
+    { x: originX + topLeft.x, y: originY + topLeft.y },
+    { x: originX + topRight.x, y: originY + topRight.y },
+    { x: originX + bottomRight.x, y: originY + bottomRight.y },
+    { x: originX + bottomLeft.x, y: originY + bottomLeft.y },
   ];
+}
+
+function drawQuad(quad) {
+  debugContext.beginPath();
+  debugContext.moveTo(quad[0].x, quad[0].y);
+  debugContext.lineTo(quad[1].x, quad[1].y);
+  debugContext.lineTo(quad[2].x, quad[2].y);
+  debugContext.lineTo(quad[3].x, quad[3].y);
+  debugContext.closePath();
+  debugContext.stroke();
+}
+
+function drawComponentBounds(component, boxX = 0, boxY = 0, drawFn = null, mode = 'logical') {
+  const quad = getBoundsQuad(component, boxX, boxY, mode);
 
   drawFn?.(component, quad);
 
@@ -532,7 +551,7 @@ function drawComponentBounds(component, boxX = 0, boxY = 0, drawFn = null) {
     const childContentOffsetY = child.contentOffset?.[1] ?? 0;
     const childBoxX = boxX + child.displacement[0] - parentContentOffsetX + childContentOffsetX;
     const childBoxY = boxY + child.displacement[1] - parentContentOffsetY + childContentOffsetY;
-    drawComponentBounds(child, childBoxX, childBoxY, drawFn);
+    drawComponentBounds(child, childBoxX, childBoxY, drawFn, mode);
   }
 }
 
@@ -544,19 +563,19 @@ function renderDebugOverlay() {
 
   debugContext.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
 
-  if (drawBoundsCheckbox?.checked) {
+  if (drawRasterBoundsCheckbox?.checked) {
+    debugContext.save();
+    debugContext.strokeStyle = '#f59e0b';
+    debugContext.lineWidth = 1;
+    drawComponentBounds(_myCC.scene, 0, 0, (_component, quad) => drawQuad(quad), 'raster');
+    debugContext.restore();
+  }
+
+  if (drawLogicalBoundsCheckbox?.checked) {
     debugContext.save();
     debugContext.strokeStyle = '#ef4444';
     debugContext.lineWidth = 1;
-    drawComponentBounds(_myCC.scene, 0, 0, (_component, quad) => {
-      debugContext.beginPath();
-      debugContext.moveTo(quad[0].x, quad[0].y);
-      debugContext.lineTo(quad[1].x, quad[1].y);
-      debugContext.lineTo(quad[2].x, quad[2].y);
-      debugContext.lineTo(quad[3].x, quad[3].y);
-      debugContext.closePath();
-      debugContext.stroke();
-    });
+    drawComponentBounds(_myCC.scene, 0, 0, (_component, quad) => drawQuad(quad), 'logical');
     debugContext.restore();
   }
 
@@ -566,15 +585,9 @@ function renderDebugOverlay() {
     debugContext.lineWidth = 2;
     drawComponentBounds(_myCC.scene, 0, 0, (component, quad) => {
       if (component === selectedComponent) {
-        debugContext.beginPath();
-        debugContext.moveTo(quad[0].x, quad[0].y);
-        debugContext.lineTo(quad[1].x, quad[1].y);
-        debugContext.lineTo(quad[2].x, quad[2].y);
-        debugContext.lineTo(quad[3].x, quad[3].y);
-        debugContext.closePath();
-        debugContext.stroke();
+        drawQuad(quad);
       }
-    });
+    }, 'logical');
     debugContext.restore();
   }
 }
