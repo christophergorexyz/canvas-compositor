@@ -1,6 +1,6 @@
 import { Vector } from '../linear-algebra/vector';
-import Component, { ComponentOptions } from './component';
-import { hitTestComponent, inverseTransformPoint, localPointForChild } from './transform-utils';
+import Component, { ComponentOptions, ReparentOptions } from './component';
+import { forwardTransformPoint, hitTestComponent, inverseTransformPoint, localPointForChild } from './transform-utils';
 
 export type CompositionBoundsMode = 'fixed' | 'auto-expand';
 
@@ -53,15 +53,24 @@ export default class Composition extends Component {
 
     for (const child of this.children) {
       const childRenderOffset = this._childRenderOffset(child);
-      const left = child.displacement[0] + childRenderOffset[0];
-      const top = child.displacement[1] + childRenderOffset[1];
-      const right = left + child.width;
-      const bottom = top + child.height;
+      const rasterPadding = child.effectiveRasterPadding;
+      const originX = child.displacement[0] + childRenderOffset[0] - rasterPadding;
+      const originY = child.displacement[1] + childRenderOffset[1] - rasterPadding;
 
-      minX = Math.min(minX, left);
-      minY = Math.min(minY, top);
-      maxX = Math.max(maxX, right);
-      maxY = Math.max(maxY, bottom);
+      const topLeft = forwardTransformPoint(child, 0, 0);
+      const topRight = forwardTransformPoint(child, child.width, 0);
+      const bottomRight = forwardTransformPoint(child, child.width, child.height);
+      const bottomLeft = forwardTransformPoint(child, 0, child.height);
+
+      const childMinX = Math.min(topLeft.x, topRight.x, bottomRight.x, bottomLeft.x) + originX;
+      const childMinY = Math.min(topLeft.y, topRight.y, bottomRight.y, bottomLeft.y) + originY;
+      const childMaxX = Math.max(topLeft.x, topRight.x, bottomRight.x, bottomLeft.x) + originX;
+      const childMaxY = Math.max(topLeft.y, topRight.y, bottomRight.y, bottomLeft.y) + originY;
+
+      minX = Math.min(minX, childMinX);
+      minY = Math.min(minY, childMinY);
+      maxX = Math.max(maxX, childMaxX);
+      maxY = Math.max(maxY, childMaxY);
     }
 
     if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) {
@@ -149,6 +158,17 @@ export default class Composition extends Component {
    */
   addChildren(children: Component[]) {
     children.forEach((child) => this.addChild(child));
+  }
+
+  /**
+   * Reparent a child from this composition into another composition.
+   */
+  reparentChild(child: Component, targetParent: Composition, options?: ReparentOptions) {
+    if (this.children.indexOf(child) < 0) {
+      return;
+    }
+
+    child.reparentTo(targetParent, options);
   }
 
   /**

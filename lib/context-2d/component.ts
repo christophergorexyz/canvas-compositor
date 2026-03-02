@@ -1,5 +1,13 @@
 import { Vector } from '../linear-algebra/vector';
 
+interface WithContentOffset {
+  contentOffset?: Vector;
+}
+
+export interface ReparentOptions {
+  preserveWorldPosition?: boolean;
+}
+
 export type RotationOrigin = 'origin' | 'center' | [number, number];
 
 
@@ -224,6 +232,50 @@ export default abstract class Component extends OffscreenCanvas {
    */
   get offset(): Vector {
     return (this.parent ? this.displacement.add(this.parent.offset) : this.displacement);
+  }
+
+  /**
+   * Render-space offset including parent composition content offsets.
+   */
+  get renderedOffset(): Vector {
+    if (!this.parent) {
+      return this.displacement;
+    }
+
+    const parentOffset = this.parent.renderedOffset;
+    const parentContentOffset = (this.parent as Component & WithContentOffset).contentOffset;
+    const contentOffsetX = parentContentOffset?.[0] ?? 0;
+    const contentOffsetY = parentContentOffset?.[1] ?? 0;
+
+    return new Vector([
+      this.displacement[0] - contentOffsetX + parentOffset[0],
+      this.displacement[1] - contentOffsetY + parentOffset[1],
+    ]);
+  }
+
+  /**
+   * Move this component from its current parent to a target composition.
+   * By default, preserves render-space position.
+   */
+  reparentTo(targetParent: Component & { addChild: (child: Component) => unknown; contentOffset?: Vector }, options?: ReparentOptions) {
+    const preserveWorldPosition = options?.preserveWorldPosition ?? true;
+    const worldBefore = preserveWorldPosition ? this.renderedOffset : null;
+
+    targetParent.addChild(this);
+
+    if (!worldBefore) {
+      return;
+    }
+
+    const parentRenderedOffset = targetParent.renderedOffset;
+    const parentContentOffset = targetParent.contentOffset;
+    const contentOffsetX = parentContentOffset?.[0] ?? 0;
+    const contentOffsetY = parentContentOffset?.[1] ?? 0;
+
+    this.displacement = new Vector([
+      worldBefore[0] - parentRenderedOffset[0] + contentOffsetX,
+      worldBefore[1] - parentRenderedOffset[1] + contentOffsetY,
+    ]);
   }
 
   /**

@@ -12,6 +12,7 @@ let bringFrontButton = document.getElementById('bring-front');
 let bringForwardButton = document.getElementById('bring-forward');
 let sendBackwardButton = document.getElementById('send-backward');
 let sendBackButton = document.getElementById('send-back');
+let toggleParentButton = document.getElementById('toggle-parent');
 let groupAutoExpandCheckbox = document.getElementById('group-auto-expand');
 let sceneAutoResizeCheckbox = document.getElementById('scene-auto-resize');
 let drawLogicalBoundsCheckbox = document.getElementById('draw-logical-bounds');
@@ -80,6 +81,19 @@ function updateSelectionAfterStackChange() {
   updateSelectedLabel();
 }
 
+function toggleSelectedParent() {
+  const selectedComponent = interactions.selectedComponent;
+  if (!selectedComponent || selectedComponent === group) return;
+
+  if (selectedComponent.parent === group) {
+    selectedComponent.reparentTo(_myCC.scene);
+  } else {
+    selectedComponent.reparentTo(group);
+  }
+
+  updateSelectionAfterStackChange();
+}
+
 bringFrontButton?.addEventListener('click', () => {
   interactions.moveSelectedToFront();
   updateSelectionAfterStackChange();
@@ -98,6 +112,10 @@ sendBackwardButton?.addEventListener('click', () => {
 sendBackButton?.addEventListener('click', () => {
   interactions.moveSelectedToBack();
   updateSelectionAfterStackChange();
+});
+
+toggleParentButton?.addEventListener('click', () => {
+  toggleSelectedParent();
 });
 
 moveLeftButton?.addEventListener('click', () => nudgeSelected(-10, 0));
