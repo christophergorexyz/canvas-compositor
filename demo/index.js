@@ -24,9 +24,7 @@ let moveRightButton = document.getElementById('move-right');
 let snapGridButton = document.getElementById('snap-grid');
 let rotateCcwButton = document.getElementById('rotate-ccw');
 let rotateCwButton = document.getElementById('rotate-cw');
-let selfRotatePivotSelect = document.getElementById('self-rotate-pivot');
-let selfRotateCcwButton = document.getElementById('self-rotate-ccw');
-let selfRotateCwButton = document.getElementById('self-rotate-cw');
+let rotateOriginSelect = document.getElementById('rotate-origin');
 let scaleInButton = document.getElementById('scale-in');
 let scaleOutButton = document.getElementById('scale-out');
 let mirrorXButton = document.getElementById('mirror-x');
@@ -125,36 +123,24 @@ openPath.rotationOrigin = 'center';
 openPath.rotation = Math.PI / 20;
 openPath.invalidate();
 
-const spriteSource = document.createElement('canvas');
-spriteSource.width = 96;
-spriteSource.height = 96;
-const spriteCtx = spriteSource.getContext('2d');
-if (spriteCtx) {
-  spriteCtx.fillStyle = '#f8fafc';
-  spriteCtx.fillRect(0, 0, 96, 96);
-  spriteCtx.fillStyle = '#1d4ed8';
-  spriteCtx.beginPath();
-  spriteCtx.arc(48, 40, 24, 0, Math.PI * 2);
-  spriteCtx.fill();
-  spriteCtx.fillStyle = '#f59e0b';
-  spriteCtx.fillRect(26, 62, 44, 12);
-  spriteCtx.strokeStyle = '#0f172a';
-  spriteCtx.lineWidth = 3;
-  spriteCtx.strokeRect(2, 2, 92, 92);
-}
+const demoImage = new Image();
+demoImage.src = '../demo.png';
 
-const picture = new Picture(spriteSource, {
-  x: 640,
-  y: 320,
-  rotationOrigin: 'center',
+demoImage.addEventListener('load', () => {
+  const picture = new Picture(demoImage, {
+    x: 640,
+    y: 320,
+    rotationOrigin: 'center',
+  });
+  picture.name = 'Picture';
+  picture.context.strokeStyle = '#0f172a';
+  picture.context.lineWidth = 2;
+  picture.path.rect(0, 0, picture.width, picture.height);
+  picture.rotation = -Math.PI / 16;
+  picture.reflect = new picture.reflect.constructor([-1, 1]);
+  picture.invalidate();
+  _myCC.scene.addChild(picture);
 });
-picture.name = 'Picture';
-picture.context.strokeStyle = '#0f172a';
-picture.context.lineWidth = 2;
-picture.path.rect(0, 0, picture.width, picture.height);
-picture.rotation = -Math.PI / 16;
-picture.reflect = new picture.reflect.constructor([-1, 1]);
-picture.invalidate();
 
 const text = new Text({
   text: 'Canvas Compositor Demo',
@@ -211,7 +197,7 @@ groupPath.invalidate();
 
 group.addChildren([groupCircle, groupEllipse, groupPath]);
 
-_myCC.scene.addChildren([bgCard, circ, ell, poly, curve, openPath, picture, text, group]);
+_myCC.scene.addChildren([bgCard, circ, ell, poly, curve, openPath, text, group]);
 _myCC.scene.boundsMode = 'fixed';
 
 let selectedComponent = null;
@@ -308,41 +294,6 @@ function nudgeSelected(dx, dy) {
   );
 }
 
-function parentTransformOrigin(component) {
-  const parent = component.parent;
-  if (!parent) {
-    return null;
-  }
-
-  const parentContentOffsetX = parent.contentOffset?.[0] ?? 0;
-  const parentContentOffsetY = parent.contentOffset?.[1] ?? 0;
-
-  return {
-    x: (parent.width / 2) + parentContentOffsetX,
-    y: (parent.height / 2) + parentContentOffsetY,
-  };
-}
-
-function transformSelectedAroundParent(transformFn) {
-  if (!selectedComponent) return;
-
-  const origin = parentTransformOrigin(selectedComponent);
-  if (!origin) return;
-
-  const centerX = selectedComponent.displacement[0] + (selectedComponent.width / 2);
-  const centerY = selectedComponent.displacement[1] + (selectedComponent.height / 2);
-
-  const transformed = transformFn(centerX - origin.x, centerY - origin.y);
-  const nextCenterX = origin.x + transformed.x;
-  const nextCenterY = origin.y + transformed.y;
-
-  setDisplacement(
-    selectedComponent,
-    nextCenterX - (selectedComponent.width / 2),
-    nextCenterY - (selectedComponent.height / 2),
-  );
-}
-
 function toggleSelectedReflect(axis) {
   if (!selectedComponent) return;
 
@@ -352,16 +303,19 @@ function toggleSelectedReflect(axis) {
   selectedComponent.reflect = new VectorCtor([nextReflectX, nextReflectY]);
 }
 
-function setSelectedRotationOriginFromControl() {
-  if (!selectedComponent) return;
-  const pivot = selfRotatePivotSelect?.value === 'origin' ? 'origin' : 'center';
-  selectedComponent.rotationOrigin = pivot;
-}
-
 function rotateSelectedSelf(deltaRadians) {
   if (!selectedComponent) return;
-  setSelectedRotationOriginFromControl();
+  const nextOrigin = rotateOriginSelect?.value === 'origin' ? 'origin' : 'center';
+  selectedComponent.rotationOrigin = nextOrigin;
   selectedComponent.rotation = selectedComponent.rotation + deltaRadians;
+}
+
+function scaleSelected(factor) {
+  if (!selectedComponent) return;
+  const VectorCtor = selectedComponent.scale.constructor;
+  const nextScaleX = Math.max(0.05, selectedComponent.scale[0] * factor);
+  const nextScaleY = Math.max(0.05, selectedComponent.scale[1] * factor);
+  selectedComponent.scale = new VectorCtor([nextScaleX, nextScaleY]);
 }
 
 _myCC.addEventListener('mousemove', () => {
@@ -452,35 +406,19 @@ snapGridButton?.addEventListener('click', () => {
 });
 
 rotateCwButton?.addEventListener('click', () => {
-  const theta = Math.PI / 12;
-  transformSelectedAroundParent((x, y) => ({
-    x: x * Math.cos(theta) - y * Math.sin(theta),
-    y: x * Math.sin(theta) + y * Math.cos(theta),
-  }));
-});
-
-rotateCcwButton?.addEventListener('click', () => {
-  const theta = -Math.PI / 12;
-  transformSelectedAroundParent((x, y) => ({
-    x: x * Math.cos(theta) - y * Math.sin(theta),
-    y: x * Math.sin(theta) + y * Math.cos(theta),
-  }));
-});
-
-selfRotateCwButton?.addEventListener('click', () => {
   rotateSelectedSelf(Math.PI / 12);
 });
 
-selfRotateCcwButton?.addEventListener('click', () => {
+rotateCcwButton?.addEventListener('click', () => {
   rotateSelectedSelf(-Math.PI / 12);
 });
 
 scaleInButton?.addEventListener('click', () => {
-  transformSelectedAroundParent((x, y) => ({ x: x * 0.9, y: y * 0.9 }));
+  scaleSelected(0.9);
 });
 
 scaleOutButton?.addEventListener('click', () => {
-  transformSelectedAroundParent((x, y) => ({ x: x * 1.1, y: y * 1.1 }));
+  scaleSelected(1.1);
 });
 
 mirrorXButton?.addEventListener('click', () => {
