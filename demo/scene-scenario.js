@@ -111,6 +111,7 @@
     text.invalidate();
 
     const group = new Composition(260, 180, { x: 520, y: 320 });
+    group.name = 'Primary Group';
     group.boundsMode = 'fixed';
 
     const groupCircle = new Circle(30, { x: 58, y: 62 });
@@ -160,6 +161,7 @@
         y: 320,
         rotationOrigin: 'center',
       });
+      picture.imageSrc = imageSrc;
       picture.name = 'Picture';
       picture.context.strokeStyle = '#0f172a';
       picture.context.lineWidth = 2;

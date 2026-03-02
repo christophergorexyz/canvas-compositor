@@ -1,6 +1,7 @@
-const { Compositor, Components2d, InteractionController, DebugOverlay } = CanvasCompositor;
+const { Compositor, Components2d, InteractionController, DebugOverlay, SceneSerialization } = CanvasCompositor;
 
-const { TransformUtils } = Components2d;
+const { Composition, TransformUtils } = Components2d;
+const { serializeSceneToString, restoreScene } = SceneSerialization;
 
 let fpsDebug = document.getElementById('fps');
 let mousexDebug = document.getElementById('mousex');
@@ -17,6 +18,10 @@ let groupAutoExpandCheckbox = document.getElementById('group-auto-expand');
 let sceneAutoResizeCheckbox = document.getElementById('scene-auto-resize');
 let drawLogicalBoundsCheckbox = document.getElementById('draw-logical-bounds');
 let drawRasterBoundsCheckbox = document.getElementById('draw-raster-bounds');
+let sceneNameInput = document.getElementById('scene-name');
+let saveSceneButton = document.getElementById('save-scene');
+let savedScenesSelect = document.getElementById('saved-scenes');
+let deleteSceneButton = document.getElementById('delete-scene');
 
 let moveLeftButton = document.getElementById('move-left');
 let moveUpButton = document.getElementById('move-up');
@@ -43,6 +48,118 @@ let debugOverlay = new DebugOverlay(debugCanvas, _myCC.scene, {
 const { group } = CanvasCompositorDemo.createDemoScene(_myCC.scene, {
   imageSrc: '../demo.png',
 });
+let primaryGroup = group;
+
+const SAVED_SCENES_STORAGE_KEY = 'canvas-compositor.demo.saved-scenes.v1';
+
+function findPrimaryGroup() {
+  const namedGroup = _myCC.scene.children.find((child) => child instanceof Composition && child.name === 'Primary Group');
+  if (namedGroup) {
+    return namedGroup;
+  }
+
+  return _myCC.scene.children.find((child) => child instanceof Composition) ?? null;
+}
+
+function updatePrimaryGroupReference() {
+  primaryGroup = findPrimaryGroup();
+}
+
+function readSavedScenes() {
+  try {
+    const raw = localStorage.getItem(SAVED_SCENES_STORAGE_KEY);
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeSavedScenes(entries) {
+  localStorage.setItem(SAVED_SCENES_STORAGE_KEY, JSON.stringify(entries));
+}
+
+function refreshSavedScenesSelect(selectedId = '') {
+  if (!savedScenesSelect) {
+    return;
+  }
+
+  const entries = readSavedScenes();
+  savedScenesSelect.innerHTML = '';
+
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = '(select)';
+  savedScenesSelect.appendChild(placeholder);
+
+  for (const entry of entries) {
+    const option = document.createElement('option');
+    option.value = entry.id;
+    option.textContent = entry.name;
+    savedScenesSelect.appendChild(option);
+  }
+
+  savedScenesSelect.value = selectedId;
+}
+
+function saveCurrentScene() {
+  const entries = readSavedScenes();
+  const id = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const sceneName = sceneNameInput?.value?.trim() || `Scene ${new Date().toLocaleString()}`;
+
+  entries.unshift({
+    id,
+    name: sceneName,
+    savedAt: new Date().toISOString(),
+    payload: serializeSceneToString(_myCC.scene),
+  });
+
+  writeSavedScenes(entries);
+  refreshSavedScenesSelect(id);
+}
+
+async function loadSavedSceneById(id) {
+  if (!id) {
+    return;
+  }
+
+  const entries = readSavedScenes();
+  const selected = entries.find((entry) => entry.id === id);
+  if (!selected || typeof selected.payload !== 'string') {
+    return;
+  }
+
+  await restoreScene(_myCC.scene, selected.payload);
+  interactions.clearSelection();
+  updatePrimaryGroupReference();
+
+  if (groupAutoExpandCheckbox) {
+    groupAutoExpandCheckbox.checked = Boolean(primaryGroup?.boundsMode === 'auto-expand');
+  }
+
+  if (sceneAutoResizeCheckbox) {
+    sceneAutoResizeCheckbox.checked = Boolean(_myCC.scene.autoResizeTargetCanvas);
+  }
+
+  updateSelectedLabel();
+  _myCC.scene.invalidate();
+}
+
+function deleteSavedSceneById(id) {
+  if (!id) {
+    return;
+  }
+
+  const entries = readSavedScenes();
+  const remainingEntries = entries.filter((entry) => entry.id !== id);
+
+  writeSavedScenes(remainingEntries);
+  refreshSavedScenesSelect('');
+}
 
 function updateSelectedLabel() {
   selectedDebug.textContent = interactions.selectedComponent?.name ?? '(none)';
@@ -83,12 +200,12 @@ function updateSelectionAfterStackChange() {
 
 function toggleSelectedParent() {
   const selectedComponent = interactions.selectedComponent;
-  if (!selectedComponent || selectedComponent === group) return;
+  if (!selectedComponent || !primaryGroup || selectedComponent === primaryGroup) return;
 
-  if (selectedComponent.parent === group) {
+  if (selectedComponent.parent === primaryGroup) {
     selectedComponent.reparentTo(_myCC.scene);
   } else {
-    selectedComponent.reparentTo(group);
+    selectedComponent.reparentTo(primaryGroup);
   }
 
   updateSelectionAfterStackChange();
@@ -152,8 +269,12 @@ mirrorYButton?.addEventListener('click', () => {
 });
 
 function applyGroupBoundsSetting(isAutoExpand) {
-  group.boundsMode = isAutoExpand ? 'auto-expand' : 'fixed';
-  group.invalidate();
+  if (!primaryGroup) {
+    return;
+  }
+
+  primaryGroup.boundsMode = isAutoExpand ? 'auto-expand' : 'fixed';
+  primaryGroup.invalidate();
 }
 
 function applySceneResizeSetting(isAutoResize) {
@@ -178,8 +299,27 @@ sceneAutoResizeCheckbox?.addEventListener('change', (event) => {
   applySceneResizeSetting(event.target.checked);
 });
 
+saveSceneButton?.addEventListener('click', () => {
+  saveCurrentScene();
+});
+
+savedScenesSelect?.addEventListener('change', async (event) => {
+  const selectedId = event.target.value;
+  try {
+    await loadSavedSceneById(selectedId);
+  } catch (error) {
+    console.error('Failed to load saved scene', error);
+  }
+});
+
+deleteSceneButton?.addEventListener('click', () => {
+  const selectedId = savedScenesSelect?.value ?? '';
+  deleteSavedSceneById(selectedId);
+});
+
 applyGroupBoundsSetting(Boolean(groupAutoExpandCheckbox?.checked));
 applySceneResizeSetting(Boolean(sceneAutoResizeCheckbox?.checked));
+refreshSavedScenesSelect();
 
 updateSelectedLabel();
 
