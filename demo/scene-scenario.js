@@ -115,6 +115,19 @@
     group.name = 'Primary Group';
     group.boundsMode = 'fixed';
 
+    const webglTriangle = new WebGLTriangle({
+      width: 180,
+      height: 180,
+      x: 300,
+      y: 70,
+      rotationOrigin: 'center',
+      clearColor: options.webglClearColor ?? [0.02, 0.02, 0.08, 1],
+      triangleColor: options.webglTriangleColor ?? [0.95, 0.45, 0.15, 1],
+    });
+    webglTriangle.name = 'WebGL Triangle';
+    webglTriangle.path.rect(0, 0, webglTriangle.width, webglTriangle.height);
+    webglTriangle.invalidate();
+
     const groupCircle = new Circle(30, { x: 58, y: 62 });
     groupCircle.context.fillStyle = '#fb7185';
     groupCircle.context.strokeStyle = '#881337';
@@ -151,7 +164,7 @@
 
     group.addChildren([groupCircle, groupEllipse, groupPath]);
 
-    scene.addChildren([bgCard, circ, ell, poly, curve, openPath, text, group]);
+    scene.addChildren([bgCard, webglTriangle, circ, ell, poly, curve, openPath, text, group]);
     scene.boundsMode = 'fixed';
 
     const demoImage = new Image();
@@ -173,31 +186,10 @@
       scene.addChild(picture);
     });
 
-    return { group };
-  }
-
-  function createWebGLDemoScene(scene, options = {}) {
-    const width = options.width ?? scene.width;
-    const height = options.height ?? scene.height;
-    const webglTriangle = new WebGLTriangle({
-      width,
-      height,
-      x: 0,
-      y: 0,
-      clearColor: options.clearColor ?? [0.02, 0.02, 0.08, 1],
-      triangleColor: options.triangleColor ?? [0.95, 0.45, 0.15, 1],
-    });
-
-    webglTriangle.name = 'WebGL Triangle';
-    webglTriangle.path.rect(0, 0, width, height);
-    scene.addChild(webglTriangle);
-    scene.boundsMode = 'fixed';
-
-    return { triangle: webglTriangle };
+    return { group, webglTriangle };
   }
 
   global.CanvasCompositorDemo = {
     createDemoScene,
-    createWebGLDemoScene,
   };
 })(globalThis);

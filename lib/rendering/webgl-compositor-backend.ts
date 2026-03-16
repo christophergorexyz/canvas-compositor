@@ -183,7 +183,7 @@ export default class WebGLCompositorBackend implements ICompositorBackend {
 
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
-    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, 1);
+    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, 0);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);

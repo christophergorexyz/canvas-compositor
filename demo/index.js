@@ -39,11 +39,8 @@ let mirrorYButton = document.getElementById('mirror-y');
 
 let canvas = document.getElementById('test-canvas');
 let debugCanvas = document.getElementById('debug-canvas');
-let webglCanvas = document.getElementById('webgl-canvas');
-let webglFpsDebug = document.getElementById('webgl-fps');
-let _myCC = new Compositor(canvas);
-let _webglCC = new Compositor(webglCanvas, {
-  backend: new WebGLCompositorBackend(webglCanvas),
+let _myCC = new Compositor(canvas, {
+  backend: new WebGLCompositorBackend(canvas),
 });
 let interactions = new InteractionController(_myCC, {
   hitTest: (x, y) => TransformUtils.hitTestComposition(_myCC.scene, x, y),
@@ -51,12 +48,8 @@ let interactions = new InteractionController(_myCC, {
 let debugOverlay = new DebugOverlay(debugCanvas, _myCC.scene, {
   getSelectedComponent: () => interactions.selectedComponent,
 });
-const { group } = CanvasCompositorDemo.createDemoScene(_myCC.scene, {
+const { group, webglTriangle } = CanvasCompositorDemo.createDemoScene(_myCC.scene, {
   imageSrc: '../demo.png',
-});
-const { triangle: webglTriangle } = CanvasCompositorDemo.createWebGLDemoScene(_webglCC.scene, {
-  width: webglCanvas.width,
-  height: webglCanvas.height,
 });
 let primaryGroup = group;
 
@@ -335,9 +328,6 @@ updateSelectedLabel();
 
 function _updateFPS() {
   fpsDebug.innerHTML = _myCC.framerate;
-  if (webglFpsDebug) {
-    webglFpsDebug.innerHTML = _webglCC.framerate;
-  }
   canvasSizeDebug.innerHTML = `${canvas.width}×${canvas.height}`;
   renderDebugOverlay();
 }
