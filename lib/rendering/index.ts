@@ -7,5 +7,6 @@ export { default as CompositorBackend } from './compositor-backend';
 export { default as RendererBackend } from './renderer';
 export { default as WebGLCompositorBackend } from './webgl-compositor-backend';
 export { default as WebGLRenderer } from './webgl-renderer';
+export { default as SVGRenderer } from './svg-renderer';
 export type { IWebGLRenderOutput, IWebGLTriangleRenderOptions } from './webgl-renderer';
-
+export type { ISVGBadgeRenderOptions, ISVGRenderOutput } from './svg-renderer';

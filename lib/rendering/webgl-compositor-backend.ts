@@ -150,7 +150,11 @@ export default class WebGLCompositorBackend extends CompositorBackend {
   }
 
   present(output: IRenderOutput) {
-    const source = output.kind === 'webgl' ? output.source : output.source;
+    const source = output.kind === 'webgl'
+      ? output.source
+      : output.kind === 'svg'
+        ? output.fallbackBitmap.source
+        : output.source;
 
     if (!isTexImageSource(source)) {
       throw new Error('WebGLCompositorBackend requires a TexImageSource-compatible render output.');

@@ -1,6 +1,7 @@
 (function (global) {
-  const { Components2d, ComponentsWebGL } = global.CanvasCompositor;
+  const { Components2d, ComponentsSVG, ComponentsWebGL } = global.CanvasCompositor;
   const { Rectangle, Circle, Ellipse, Polygon, Composition, Bezier, Picture, Text, Line, Path } = Components2d;
+  const { SVGBadge } = ComponentsSVG;
   const { WebGLTriangle } = ComponentsWebGL;
 
   function setDisplacement(component, x, y) {
@@ -128,6 +129,22 @@
     webglTriangle.path.rect(0, 0, webglTriangle.width, webglTriangle.height);
     webglTriangle.invalidate();
 
+    const svgBadge = new SVGBadge({
+      width: 170,
+      height: 96,
+      x: 90,
+      y: 220,
+      label: 'SVG',
+      backgroundColor: '#f8fafc',
+      accentColor: '#f97316',
+      textColor: '#7c2d12',
+    });
+    svgBadge.name = 'SVG Badge';
+    svgBadge.path.rect(0, 0, svgBadge.width, svgBadge.height);
+    svgBadge.rotationOrigin = 'center';
+    svgBadge.rotation = -Math.PI / 28;
+    svgBadge.invalidate();
+
     const groupCircle = new Circle(30, { x: 58, y: 62 });
     groupCircle.context.fillStyle = '#fb7185';
     groupCircle.context.strokeStyle = '#881337';
@@ -164,7 +181,7 @@
 
     group.addChildren([groupCircle, groupEllipse, groupPath]);
 
-    scene.addChildren([bgCard, webglTriangle, circ, ell, poly, curve, openPath, text, group]);
+    scene.addChildren([bgCard, webglTriangle, svgBadge, circ, ell, poly, curve, openPath, text, group]);
     scene.boundsMode = 'fixed';
 
     const demoImage = new Image();
@@ -186,7 +203,7 @@
       scene.addChild(picture);
     });
 
-    return { group, webglTriangle };
+    return { group, webglTriangle, svgBadge };
   }
 
   global.CanvasCompositorDemo = {

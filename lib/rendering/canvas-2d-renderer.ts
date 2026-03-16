@@ -1,5 +1,6 @@
 import Canvas2DRenderTarget, { IRenderTarget } from './canvas-2d-render-target';
 import Renderer from './renderer';
+import { ISVGRenderOutput } from './svg-renderer';
 import { IWebGLRenderOutput } from './webgl-renderer';
 
 export interface IBitmapRenderOutput {
@@ -9,7 +10,7 @@ export interface IBitmapRenderOutput {
   height: number;
 }
 
-export type IRenderOutput = IBitmapRenderOutput | IWebGLRenderOutput;
+export type IRenderOutput = IBitmapRenderOutput | IWebGLRenderOutput | ISVGRenderOutput;
 
 export interface IDrawRenderTargetOptions {
   x: number;
@@ -33,6 +34,10 @@ function asBitmapRenderOutput(output: IRenderOutput): IBitmapRenderOutput {
   }
 
   if (output.kind === 'webgl') {
+    return output.fallbackBitmap;
+  }
+
+  if (output.kind === 'svg') {
     return output.fallbackBitmap;
   }
 

@@ -22,6 +22,7 @@ let drawRasterBoundsCheckbox = document.getElementById('draw-raster-bounds');
 let sceneNameInput = document.getElementById('scene-name');
 let saveSceneButton = document.getElementById('save-scene');
 let savedScenesSelect = document.getElementById('saved-scenes');
+let componentSelect = document.getElementById('component-select');
 let deleteSceneButton = document.getElementById('delete-scene');
 
 let moveLeftButton = document.getElementById('move-left');
@@ -52,6 +53,7 @@ const { group, webglTriangle } = CanvasCompositorDemo.createDemoScene(_myCC.scen
   imageSrc: '../demo.png',
 });
 let primaryGroup = group;
+let componentSelectSignature = '';
 
 const SAVED_SCENES_STORAGE_KEY = 'canvas-compositor.demo.saved-scenes.v1';
 
@@ -149,6 +151,7 @@ async function loadSavedSceneById(id) {
   }
 
   updateSelectedLabel();
+  refreshComponentSelect();
   _myCC.scene.invalidate();
 }
 
@@ -166,6 +169,51 @@ function deleteSavedSceneById(id) {
 
 function updateSelectedLabel() {
   selectedDebug.textContent = interactions.selectedComponent?.name ?? '(none)';
+}
+
+function collectNamedComponents(root) {
+  const components = [];
+
+  function visit(component) {
+    if (component !== _myCC.scene && component.name) {
+      components.push(component);
+    }
+
+    for (const child of component.children) {
+      visit(child);
+    }
+  }
+
+  visit(root);
+  return components;
+}
+
+function refreshComponentSelect() {
+  if (!componentSelect) {
+    return;
+  }
+
+  const components = collectNamedComponents(_myCC.scene);
+  const signature = components.map((component) => component.uuid).join('|');
+
+  if (signature !== componentSelectSignature) {
+    componentSelectSignature = signature;
+    componentSelect.innerHTML = '';
+
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = '(none)';
+    componentSelect.appendChild(placeholder);
+
+    for (const component of components) {
+      const option = document.createElement('option');
+      option.value = component.uuid;
+      option.textContent = component.name;
+      componentSelect.appendChild(option);
+    }
+  }
+
+  componentSelect.value = interactions.selectedComponent?.uuid ?? '';
 }
 
 function nudgeSelected(dx, dy) {
@@ -192,6 +240,7 @@ _myCC.addEventListener('mousemove', () => {
 
 interactions.addEventListener('selectionchange', () => {
   updateSelectedLabel();
+  refreshComponentSelect();
 });
 
 function updateSelectionAfterStackChange() {
@@ -315,6 +364,17 @@ savedScenesSelect?.addEventListener('change', async (event) => {
   }
 });
 
+componentSelect?.addEventListener('change', (event) => {
+  const selectedId = event.target.value;
+  if (!selectedId) {
+    interactions.clearSelection();
+    return;
+  }
+
+  const component = collectNamedComponents(_myCC.scene).find((entry) => entry.uuid === selectedId) ?? null;
+  interactions.setSelectedComponent(component);
+});
+
 deleteSceneButton?.addEventListener('click', () => {
   const selectedId = savedScenesSelect?.value ?? '';
   deleteSavedSceneById(selectedId);
@@ -325,10 +385,12 @@ applySceneResizeSetting(Boolean(sceneAutoResizeCheckbox?.checked));
 refreshSavedScenesSelect();
 
 updateSelectedLabel();
+refreshComponentSelect();
 
 function _updateFPS() {
   fpsDebug.innerHTML = _myCC.framerate;
   canvasSizeDebug.innerHTML = `${canvas.width}×${canvas.height}`;
+  refreshComponentSelect();
   renderDebugOverlay();
 }
 
