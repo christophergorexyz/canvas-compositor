@@ -1,4 +1,6 @@
 import { Vector } from '../linear-algebra/vector';
+import { IRenderTarget } from '../rendering/canvas-2d-render-target';
+import Canvas2DRenderer, { IRendererBackend } from '../rendering/canvas-2d-renderer';
 
 interface WithContentOffset {
   contentOffset?: Vector;
@@ -23,7 +25,11 @@ export interface ComponentOptions extends Partial<CanvasFillStrokeStyles>, Parti
   reflect?: [number, number];
   rotationOrigin?: RotationOrigin;
   children?: Component[];
+  renderer?: IRendererBackend;
 }
+
+
+const defaultRenderer = new Canvas2DRenderer();
 
 /**
  * The base class of things that may be drawn on the canvas.
@@ -32,12 +38,14 @@ export interface ComponentOptions extends Partial<CanvasFillStrokeStyles>, Parti
  * call this directly, although they may wish to extend their own
  * classes with it.
  */
-export default abstract class Component extends OffscreenCanvas {
+export default abstract class Component {
 
   /**
    * a uuid for the object
    */
   readonly uuid = crypto.randomUUID();
+  readonly renderer: IRendererBackend;
+  readonly renderTarget: IRenderTarget;
   readonly context: OffscreenCanvasRenderingContext2D;
   readonly path: Path2D = new Path2D();
   private _rasterPadding: number = 0;
@@ -111,7 +119,8 @@ export default abstract class Component extends OffscreenCanvas {
 
   constructor(width: number, height: number, options?: ComponentOptions) {
     const rasterPadding = Math.max(0, Math.ceil(options?.rasterPadding ?? 0));
-    super(width + (2 * rasterPadding), height + (2 * rasterPadding));
+    this.renderer = options?.renderer ?? defaultRenderer;
+    this.renderTarget = this.renderer.createRenderTarget(width + (2 * rasterPadding), height + (2 * rasterPadding));
     this._rasterPadding = rasterPadding;
     this._effectiveRasterPadding = rasterPadding;
     this._contentWidth = width;
@@ -124,13 +133,28 @@ export default abstract class Component extends OffscreenCanvas {
     this.shear = new Vector(options?.shear ?? [0, 0]);
     this.reflect = new Vector(options?.reflect ?? [1, 1]);
     this.perspective = new Vector(options?.perspective ?? [1, 1]);
+    this.name = options?.name ?? this.name;
     this.children = options?.children ?? [];
-    this.children.forEach((child) => child.parent = this);
-    let context = this.getContext('2d');
-    if (!context) {
-      throw new Error(`OffscreenCanvasRenderingContext2D could not be created for ${this.name}`);
-    }
-    this.context = context;
+    this.children.forEach((child) => {
+      child.parent = this;
+    });
+    this.context = this.renderTarget.context;
+  }
+
+  get width() {
+    return this.renderTarget.width;
+  }
+
+  set width(value: number) {
+    this.renderTarget.width = value;
+  }
+
+  get height() {
+    return this.renderTarget.height;
+  }
+
+  set height(value: number) {
+    this.renderTarget.height = value;
   }
 
   get rotation(): number {
@@ -368,8 +392,7 @@ export default abstract class Component extends OffscreenCanvas {
     };
 
     this._effectiveRasterPadding = nextPadding;
-    this.width = this._contentWidth + (2 * nextPadding);
-    this.height = this._contentHeight + (2 * nextPadding);
+    this.renderTarget.resize(this._contentWidth + (2 * nextPadding), this._contentHeight + (2 * nextPadding));
     this.context.fillStyle = preservedState.fillStyle;
     this.context.strokeStyle = preservedState.strokeStyle;
     this.context.lineWidth = preservedState.lineWidth;
@@ -403,7 +426,7 @@ export default abstract class Component extends OffscreenCanvas {
       this._syncRasterPaddingToStroke();
 
       //clear any old rendering artifacts - they are no longer viable
-      this.context.clearRect(0, 0, this.width, this.height);
+      this.renderTarget.clear();
       if (this.effectiveRasterPadding > 0) {
         this.context.save();
         this.context.translate(this.effectiveRasterPadding, this.effectiveRasterPadding);
@@ -423,22 +446,17 @@ export default abstract class Component extends OffscreenCanvas {
     const reflectX = this.reflect[0] < 0 ? -1 : 1;
     const reflectY = this.reflect[1] < 0 ? -1 : 1;
     const pivot = this.rotationPivot;
-
-    if (rotation === 0 && reflectX === 1 && reflectY === 1) {
-      component.context.drawImage(this, x, y, this.width, this.height);
-      return;
-    }
-
-    component.context.save();
-    component.context.translate(
-      x + pivot[0],
-      y + pivot[1],
-    );
-    component.context.rotate(rotation);
-    component.context.scale(reflectX, reflectY);
-    component.context.translate(-pivot[0], -pivot[1]);
-    component.context.drawImage(this, 0, 0, this.width, this.height);
-    component.context.restore();
+    this.renderer.drawRenderTarget(this.renderTarget, component.context, {
+      x,
+      y,
+      width: this.width,
+      height: this.height,
+      rotation,
+      pivotX: pivot[0],
+      pivotY: pivot[1],
+      reflectX,
+      reflectY,
+    });
   }
 
   isPointInPath(...args: Parameters<typeof OffscreenCanvasRenderingContext2D.prototype.isPointInPath>) {
@@ -447,6 +465,10 @@ export default abstract class Component extends OffscreenCanvas {
 
   isPointInStroke(...args: Parameters<typeof OffscreenCanvasRenderingContext2D.prototype.isPointInStroke>) {
     return this.context.isPointInStroke(...args);
+  }
+
+  transferToImageBitmap() {
+    return this.renderTarget.transferToImageBitmap();
   }
 
   /**

@@ -122,7 +122,7 @@ export default class Composition extends Component {
 
   draw(component: Component, offset?: Vector) {
     if (this.dirty) {
-      this.context.clearRect(0, 0, this.width, this.height);
+      this.renderTarget.clear();
       this.render();
       this.dirty = false;
     }
@@ -133,7 +133,12 @@ export default class Composition extends Component {
 
     const x = (offset?.[0] ?? 0) + this._contentOffset[0];
     const y = (offset?.[1] ?? 0) + this._contentOffset[1];
-    component.context.drawImage(this, x, y, this.width, this.height);
+    this.renderer.drawRenderTarget(this.renderTarget, component.context, {
+      x,
+      y,
+      width: this.width,
+      height: this.height,
+    });
   }
 
   /**

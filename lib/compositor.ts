@@ -1,5 +1,6 @@
 import Component from './context-2d/component';
 import Composition from './context-2d/composition';
+import Canvas2DRenderer from './rendering/canvas-2d-renderer';
 
 /**
  * The Compositor class is the entry-point to usage of the `canvas-compositor`.
@@ -71,6 +72,7 @@ export default class Compositor extends EventTarget {
    * ImageBitmapRenderingContext enables offscreen canvases to be used for rendering
    */
   readonly context: ImageBitmapRenderingContext;
+  readonly renderer: Canvas2DRenderer;
 
   /**
    * The Compositor class establishes an event dispatcher, animation loop, and scene graph for
@@ -82,7 +84,8 @@ export default class Compositor extends EventTarget {
   constructor(canvas: HTMLCanvasElement) {
     super();
     this.canvas = canvas;
-    this.scene = new Composition(this.canvas.width, this.canvas.height);
+    this.renderer = new Canvas2DRenderer();
+    this.scene = new Composition(this.canvas.width, this.canvas.height, { renderer: this.renderer });
 
     let context = this.canvas.getContext('bitmaprenderer', { alpha: false, desynchronized: true });
 
@@ -159,9 +162,8 @@ export default class Compositor extends EventTarget {
     window.requestAnimationFrame(this._animationLoop.bind(this));
     this._currentTime = +new Date();
     //set maximum of 60 fps and only redraw if necessary
-    if ( /*this._currentTime - this._lastFrameTimestamp >= this._targetFPS &&*/ this.scene.dirty) {
-      //this._lastRenderTime = +new Date();
-      //this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    if (this.scene.dirty) {
+
       this.scene.draw(this.scene);
 
       if (this.scene.autoResizeTargetCanvas && (this.canvas.width !== this.scene.width || this.canvas.height !== this.scene.height)) {
@@ -169,8 +171,7 @@ export default class Compositor extends EventTarget {
         this.canvas.height = this.scene.height;
       }
 
-      this.context.transferFromImageBitmap(this.scene.transferToImageBitmap());
-      //this.scene.draw(this.scene); // the scene draws onto itself
+      this.renderer.present(this.scene.renderTarget, this.context);
     }
     this.framerate = Math.round(1000 / (this._currentTime - this._lastFrameTimestamp));
     this._lastFrameTimestamp = +new Date();
@@ -186,16 +187,8 @@ export default class Compositor extends EventTarget {
     let x = e.offsetX - this._leftPadding;
     let y = e.offsetY - this._topPadding;
 
-    //pass through x and y to propagated events
-    //e.canvasX = x;
-    //e.canvasY = y;
-
-    // for (let c of this.scene.children) {
-    //   c.dispatchEvent(e);
-    // }
-
     let clickedObject = this.scene.childAt(x, y);
-    return clickedObject;//?.dispatchEvent(e);
+    return clickedObject;
   }
 
   /**
@@ -208,13 +201,8 @@ export default class Compositor extends EventTarget {
     let x = e.offsetX - this._leftPadding;
     let y = e.offsetY - this._topPadding;
 
-    //pass through x and y to propagated events
-    // e.canvasX = x;
-    // e.canvasY = y;
-
     let clickedObject = this.scene.childAt(x, y);
-    return clickedObject;//?.dispatchEvent(e);
-
+    return clickedObject;
   }
 
   /**
@@ -225,10 +213,6 @@ export default class Compositor extends EventTarget {
     e.preventDefault();
     this.mouseX = e.offsetX - this._leftPadding;
     this.mouseY = e.offsetY - this._topPadding;
-
-    // for (let c of this.scene.children) {
-    //   c?.dispatchEvent(e);
-    // }
   }
 
   /**
@@ -241,12 +225,8 @@ export default class Compositor extends EventTarget {
     let x = e.offsetX - this._leftPadding;
     let y = e.offsetY - this._topPadding;
 
-    //pass through x and y to propagated events
-    // e.canvasX = x;
-    // e.canvasY = y;
-
     let clickedObject = this.scene.childAt(x, y);
-    return clickedObject;//?.dispatchEvent(e);
+    return clickedObject;
   }
 
   /**
@@ -255,9 +235,5 @@ export default class Compositor extends EventTarget {
    */
   private _handleMouseOut(e: MouseEvent) {
     e.preventDefault();
-    // for (let c of this.scene.children) {
-    //   c?.dispatchEvent(e);
-    // }
   }
 }
-
