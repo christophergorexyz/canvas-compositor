@@ -1,5 +1,5 @@
-import Canvas2DRenderTarget from './canvas-2d-render-target';
-import { IRenderTarget } from './canvas-2d-render-target';
+import Canvas2DRenderTarget, { IRenderTarget } from './canvas-2d-render-target';
+import Renderer from './renderer';
 import { IWebGLRenderOutput } from './webgl-renderer';
 
 export interface IBitmapRenderOutput {
@@ -23,22 +23,6 @@ export interface IDrawRenderTargetOptions {
   reflectY?: number;
 }
 
-export interface IRendererBackend {
-  createRenderTarget(width: number, height: number): IRenderTarget;
-  presentRenderOutput(output: IRenderOutput, context: ImageBitmapRenderingContext): void;
-  drawRenderOutput(
-    output: IRenderOutput,
-    destination: OffscreenCanvasRenderingContext2D,
-    options: IDrawRenderTargetOptions,
-  ): void;
-  drawRenderTarget(
-    source: IRenderTarget,
-    destination: OffscreenCanvasRenderingContext2D,
-    options: IDrawRenderTargetOptions,
-  ): void;
-  present(target: IRenderTarget, context: ImageBitmapRenderingContext): void;
-}
-
 function normalizedReflection(value?: number) {
   return value && value < 0 ? -1 : 1;
 }
@@ -55,7 +39,7 @@ function asBitmapRenderOutput(output: IRenderOutput): IBitmapRenderOutput {
   throw new Error(`Canvas2DRenderer does not support render output kind "${String((output as { kind?: string }).kind)}".`);
 }
 
-export default class Canvas2DRenderer implements IRendererBackend {
+export default class Canvas2DRenderer extends Renderer {
   createRenderTarget(width: number, height: number): IRenderTarget {
     return new Canvas2DRenderTarget(width, height);
   }

@@ -1,7 +1,8 @@
 import Component from '../context-2d/component';
 import Composition from '../context-2d/composition';
-import { ICompositorBackend } from './canvas-2d-compositor-backend';
-import Canvas2DRenderer, { IRenderOutput, IRendererBackend } from './canvas-2d-renderer';
+import Canvas2DRenderer, { IRenderOutput } from './canvas-2d-renderer';
+import CompositorBackend from './compositor-backend';
+import Renderer from './renderer';
 
 function isTexImageSource(source: unknown): source is TexImageSource {
   return source instanceof HTMLImageElement
@@ -75,10 +76,9 @@ function isIdentityPresentationComponent(component: Component) {
     && component.reflect[1] === 1;
 }
 
-export default class WebGLCompositorBackend implements ICompositorBackend {
+export default class WebGLCompositorBackend extends CompositorBackend {
   readonly canvas: HTMLCanvasElement;
   readonly gl: WebGLRenderingContext;
-  readonly componentRenderer: IRendererBackend;
   private readonly program: WebGLProgram;
   private readonly positionBuffer: WebGLBuffer;
   private readonly texCoordBuffer: WebGLBuffer;
@@ -87,9 +87,9 @@ export default class WebGLCompositorBackend implements ICompositorBackend {
   private readonly texCoordLocation: number;
   private readonly textureLocation: WebGLUniformLocation;
 
-  constructor(canvas: HTMLCanvasElement, componentRenderer: IRendererBackend = new Canvas2DRenderer()) {
+  constructor(canvas: HTMLCanvasElement, componentRenderer: Renderer = new Canvas2DRenderer()) {
+    super(componentRenderer);
     this.canvas = canvas;
-    this.componentRenderer = componentRenderer;
     this.gl = getWebGLContext(canvas);
     this.program = createProgram(this.gl, `
       attribute vec2 aPosition;

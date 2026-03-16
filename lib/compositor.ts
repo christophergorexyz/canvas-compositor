@@ -1,9 +1,10 @@
 import Component from './context-2d/component';
 import Composition from './context-2d/composition';
-import Canvas2DCompositorBackend, { ICompositorBackend } from './rendering/canvas-2d-compositor-backend';
+import Canvas2DCompositorBackend from './rendering/canvas-2d-compositor-backend';
+import CompositorBackend from './rendering/compositor-backend';
 
 export interface CompositorOptions {
-  backend?: ICompositorBackend;
+  backend?: CompositorBackend;
 }
 
 /**
@@ -71,7 +72,7 @@ export default class Compositor extends EventTarget {
    */
   readonly canvas: HTMLCanvasElement;
 
-  readonly backend: ICompositorBackend;
+  readonly backend: CompositorBackend;
 
   /**
    * The Compositor class establishes an event dispatcher, animation loop, and scene graph for

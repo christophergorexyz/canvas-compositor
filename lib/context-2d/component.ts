@@ -1,6 +1,7 @@
 import { Vector } from '../linear-algebra/vector';
 import { IRenderTarget } from '../rendering/canvas-2d-render-target';
-import Canvas2DRenderer, { IBitmapRenderOutput, IRenderOutput, IRendererBackend } from '../rendering/canvas-2d-renderer';
+import Canvas2DRenderer, { IBitmapRenderOutput, IRenderOutput } from '../rendering/canvas-2d-renderer';
+import Renderer from '../rendering/renderer';
 
 interface WithContentOffset {
   contentOffset?: Vector;
@@ -25,7 +26,7 @@ export interface ComponentOptions extends Partial<CanvasFillStrokeStyles>, Parti
   reflect?: [number, number];
   rotationOrigin?: RotationOrigin;
   children?: Component[];
-  renderer?: IRendererBackend;
+  renderer?: Renderer;
 }
 
 
@@ -44,7 +45,7 @@ export default abstract class Component {
    * a uuid for the object
    */
   readonly uuid = crypto.randomUUID();
-  readonly renderer: IRendererBackend;
+  readonly renderer: Renderer;
   readonly renderTarget: IRenderTarget;
   readonly context: OffscreenCanvasRenderingContext2D;
   readonly path: Path2D = new Path2D();
