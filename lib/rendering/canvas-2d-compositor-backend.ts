@@ -1,7 +1,9 @@
+import Composition from '../context-2d/composition';
 import Canvas2DRenderer, { IRenderOutput, IRendererBackend } from './canvas-2d-renderer';
 
 export interface ICompositorBackend {
   readonly componentRenderer: IRendererBackend;
+  getPresentationOutput(scene: Composition): IRenderOutput;
   present(output: IRenderOutput): void;
 }
 
@@ -20,6 +22,10 @@ export default class Canvas2DCompositorBackend implements ICompositorBackend {
     }
 
     this.context = context as ImageBitmapRenderingContext;
+  }
+
+  getPresentationOutput(scene: Composition) {
+    return scene.getRenderOutput();
   }
 
   present(output: IRenderOutput) {

@@ -1,4 +1,5 @@
-const { Compositor, Components2d, InteractionController, DebugOverlay, SceneSerialization } = CanvasCompositor;
+const { Compositor, Components2d, InteractionController, DebugOverlay, Rendering, SceneSerialization } = CanvasCompositor;
+const { WebGLCompositorBackend } = Rendering;
 
 const { Composition, TransformUtils } = Components2d;
 const { serializeSceneToString, restoreScene } = SceneSerialization;
@@ -38,7 +39,12 @@ let mirrorYButton = document.getElementById('mirror-y');
 
 let canvas = document.getElementById('test-canvas');
 let debugCanvas = document.getElementById('debug-canvas');
+let webglCanvas = document.getElementById('webgl-canvas');
+let webglFpsDebug = document.getElementById('webgl-fps');
 let _myCC = new Compositor(canvas);
+let _webglCC = new Compositor(webglCanvas, {
+  backend: new WebGLCompositorBackend(webglCanvas),
+});
 let interactions = new InteractionController(_myCC, {
   hitTest: (x, y) => TransformUtils.hitTestComposition(_myCC.scene, x, y),
 });
@@ -47,6 +53,10 @@ let debugOverlay = new DebugOverlay(debugCanvas, _myCC.scene, {
 });
 const { group } = CanvasCompositorDemo.createDemoScene(_myCC.scene, {
   imageSrc: '../demo.png',
+});
+const { triangle: webglTriangle } = CanvasCompositorDemo.createWebGLDemoScene(_webglCC.scene, {
+  width: webglCanvas.width,
+  height: webglCanvas.height,
 });
 let primaryGroup = group;
 
@@ -325,8 +335,30 @@ updateSelectedLabel();
 
 function _updateFPS() {
   fpsDebug.innerHTML = _myCC.framerate;
+  if (webglFpsDebug) {
+    webglFpsDebug.innerHTML = _webglCC.framerate;
+  }
   canvasSizeDebug.innerHTML = `${canvas.width}×${canvas.height}`;
   renderDebugOverlay();
 }
 
 setInterval(_updateFPS, 250);
+
+function animateWebGLTriangle() {
+  const now = performance.now() / 1000;
+  const color = [
+    0.55 + (0.35 * Math.sin(now)),
+    0.45 + (0.35 * Math.sin(now * 1.7 + 1.2)),
+    0.35 + (0.3 * Math.sin(now * 1.3 + 2.1)),
+    1,
+  ];
+
+  webglTriangle.rerender({
+    clearColor: [0.02, 0.02, 0.08, 1],
+    triangleColor: color,
+  });
+
+  requestAnimationFrame(animateWebGLTriangle);
+}
+
+animateWebGLTriangle();

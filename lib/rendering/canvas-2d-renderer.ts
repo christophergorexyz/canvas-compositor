@@ -1,5 +1,6 @@
 import Canvas2DRenderTarget from './canvas-2d-render-target';
 import { IRenderTarget } from './canvas-2d-render-target';
+import { IWebGLRenderOutput } from './webgl-renderer';
 
 export interface IBitmapRenderOutput {
   kind: 'bitmap';
@@ -8,7 +9,7 @@ export interface IBitmapRenderOutput {
   height: number;
 }
 
-export type IRenderOutput = IBitmapRenderOutput;
+export type IRenderOutput = IBitmapRenderOutput | IWebGLRenderOutput;
 
 export interface IDrawRenderTargetOptions {
   x: number;
@@ -42,18 +43,28 @@ function normalizedReflection(value?: number) {
   return value && value < 0 ? -1 : 1;
 }
 
+function asBitmapRenderOutput(output: IRenderOutput): IBitmapRenderOutput {
+  if (output.kind === 'bitmap') {
+    return output;
+  }
+
+  if (output.kind === 'webgl') {
+    return output.fallbackBitmap;
+  }
+
+  throw new Error(`Canvas2DRenderer does not support render output kind "${String((output as { kind?: string }).kind)}".`);
+}
+
 export default class Canvas2DRenderer implements IRendererBackend {
   createRenderTarget(width: number, height: number): IRenderTarget {
     return new Canvas2DRenderTarget(width, height);
   }
 
   presentRenderOutput(output: IRenderOutput, context: ImageBitmapRenderingContext) {
-    if (output.kind !== 'bitmap') {
-      throw new Error(`Canvas2DRenderer does not support render output kind "${String((output as { kind?: string }).kind)}".`);
-    }
+    const bitmapOutput = asBitmapRenderOutput(output);
 
-    if (output.source instanceof OffscreenCanvas) {
-      context.transferFromImageBitmap(output.source.transferToImageBitmap());
+    if (bitmapOutput.source instanceof OffscreenCanvas) {
+      context.transferFromImageBitmap(bitmapOutput.source.transferToImageBitmap());
       return;
     }
 
@@ -65,14 +76,12 @@ export default class Canvas2DRenderer implements IRendererBackend {
     destination: OffscreenCanvasRenderingContext2D,
     options: IDrawRenderTargetOptions,
   ) {
-    if (output.kind !== 'bitmap') {
-      throw new Error(`Canvas2DRenderer does not support render output kind "${String((output as { kind?: string }).kind)}".`);
-    }
+    const bitmapOutput = asBitmapRenderOutput(output);
 
     const normalizedOptions = {
       ...options,
-      width: options.width ?? output.width,
-      height: options.height ?? output.height,
+      width: options.width ?? bitmapOutput.width,
+      height: options.height ?? bitmapOutput.height,
     };
 
     const rotation = normalizedOptions.rotation ?? 0;
@@ -82,7 +91,7 @@ export default class Canvas2DRenderer implements IRendererBackend {
     const pivotY = normalizedOptions.pivotY ?? 0;
 
     if (rotation === 0 && reflectX === 1 && reflectY === 1) {
-      destination.drawImage(output.source, normalizedOptions.x, normalizedOptions.y, normalizedOptions.width, normalizedOptions.height);
+      destination.drawImage(bitmapOutput.source, normalizedOptions.x, normalizedOptions.y, normalizedOptions.width, normalizedOptions.height);
       return;
     }
 
@@ -91,7 +100,7 @@ export default class Canvas2DRenderer implements IRendererBackend {
     destination.rotate(rotation);
     destination.scale(reflectX, reflectY);
     destination.translate(-pivotX, -pivotY);
-    destination.drawImage(output.source, 0, 0, normalizedOptions.width, normalizedOptions.height);
+    destination.drawImage(bitmapOutput.source, 0, 0, normalizedOptions.width, normalizedOptions.height);
     destination.restore();
   }
 

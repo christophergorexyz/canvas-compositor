@@ -1,5 +1,6 @@
 import Picture from '../context-2d/picture';
 import { ComponentOptions } from '../context-2d/component';
+import { IRenderOutput } from '../rendering/canvas-2d-renderer';
 import WebGLRenderer, { IWebGLTriangleRenderOptions } from '../rendering/webgl-renderer';
 
 type WebGLSurface = OffscreenCanvas;
@@ -27,5 +28,9 @@ export default class WebGLTriangle extends Picture {
   rerender(options?: IWebGLTriangleRenderOptions) {
     this.webglRenderer.renderTriangle(options);
     this.invalidate();
+  }
+
+  override getRenderOutput(): IRenderOutput {
+    return this.webglRenderer.getRenderOutput();
   }
 }

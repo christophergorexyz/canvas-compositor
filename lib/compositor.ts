@@ -162,7 +162,7 @@ export default class Compositor extends EventTarget {
         this.canvas.height = this.scene.height;
       }
 
-      this.backend.present(this.scene.getRenderOutput());
+      this.backend.present(this.backend.getPresentationOutput(this.scene));
     }
     this.framerate = Math.round(1000 / (this._currentTime - this._lastFrameTimestamp));
     this._lastFrameTimestamp = +new Date();

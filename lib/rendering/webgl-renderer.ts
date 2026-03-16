@@ -1,5 +1,18 @@
 type WebGLSurface = HTMLCanvasElement | OffscreenCanvas;
 
+export interface IWebGLRenderOutput {
+  kind: 'webgl';
+  source: OffscreenCanvas;
+  width: number;
+  height: number;
+  fallbackBitmap: {
+    kind: 'bitmap';
+    source: CanvasImageSource;
+    width: number;
+    height: number;
+  };
+}
+
 export interface IWebGLTriangleRenderOptions {
   clearColor?: [number, number, number, number];
   triangleColor?: [number, number, number, number];
@@ -126,5 +139,24 @@ export default class WebGLRenderer {
     this.gl.vertexAttribPointer(this.positionLocation, 2, this.gl.FLOAT, false, 0, 0);
     this.gl.uniform4fv(this.colorLocation, triangleColor);
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
+  }
+
+  getRenderOutput(): IWebGLRenderOutput {
+    if (!(this.surface instanceof OffscreenCanvas)) {
+      throw new Error('WebGLRenderer requires an OffscreenCanvas surface to produce a WebGL render output.');
+    }
+
+    return {
+      kind: 'webgl',
+      source: this.surface,
+      width: this.surface.width,
+      height: this.surface.height,
+      fallbackBitmap: {
+        kind: 'bitmap',
+        source: this.surface,
+        width: this.surface.width,
+        height: this.surface.height,
+      },
+    };
   }
 }
