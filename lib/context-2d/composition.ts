@@ -121,11 +121,7 @@ export default class Composition extends Component {
   }
 
   draw(component: Component, offset?: Vector) {
-    if (this.dirty) {
-      this.renderTarget.clear();
-      this.render();
-      this.dirty = false;
-    }
+    const output = this.getRenderOutput();
 
     if (component === this) {
       return;
@@ -133,7 +129,7 @@ export default class Composition extends Component {
 
     const x = (offset?.[0] ?? 0) + this._contentOffset[0];
     const y = (offset?.[1] ?? 0) + this._contentOffset[1];
-    this.renderer.drawRenderTarget(this.renderTarget, component.context, {
+    this.renderer.drawRenderOutput(output, component.context, {
       x,
       y,
       width: this.width,
@@ -212,5 +208,15 @@ export default class Composition extends Component {
     //m.draw(renderContext, contextOffset);
     //});
     //renderContext.globalCompositeOperation = 'normal';
+  }
+
+  protected override ensureRenderIsCurrent() {
+    if (!this.dirty) {
+      return;
+    }
+
+    this.renderTarget.clear();
+    this.render();
+    this.dirty = false;
   }
 }

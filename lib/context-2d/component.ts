@@ -1,6 +1,6 @@
 import { Vector } from '../linear-algebra/vector';
 import { IRenderTarget } from '../rendering/canvas-2d-render-target';
-import Canvas2DRenderer, { IRendererBackend } from '../rendering/canvas-2d-renderer';
+import Canvas2DRenderer, { IBitmapRenderOutput, IRenderOutput, IRendererBackend } from '../rendering/canvas-2d-renderer';
 
 interface WithContentOffset {
   contentOffset?: Vector;
@@ -416,27 +416,44 @@ export default abstract class Component {
     this.context.imageSmoothingQuality = preservedState.imageSmoothingQuality;
   }
 
+  protected ensureRenderIsCurrent() {
+    if (!this.dirty) {
+      return;
+    }
+
+    this._syncRasterPaddingToStroke();
+    this.renderTarget.clear();
+    if (this.effectiveRasterPadding > 0) {
+      this.context.save();
+      this.context.translate(this.effectiveRasterPadding, this.effectiveRasterPadding);
+      this.render();
+      this.context.restore();
+    } else {
+      this.render();
+    }
+    this.dirty = false;
+  }
+
+  getRenderOutput(): IRenderOutput {
+    this.ensureRenderIsCurrent();
+
+    const output: IBitmapRenderOutput = {
+      kind: 'bitmap',
+      source: this.renderTarget.getImageSource(),
+      width: this.width,
+      height: this.height,
+    };
+
+    return output;
+  }
+
   /**
    * draw the object to canvas, render it if necessary
    * @param component component to draw to
    * @param offset the offset on the canvas - optional, used for prerendering
    */
   draw(component: Component, offset?: Vector) {
-    if (this.dirty) {
-      this._syncRasterPaddingToStroke();
-
-      //clear any old rendering artifacts - they are no longer viable
-      this.renderTarget.clear();
-      if (this.effectiveRasterPadding > 0) {
-        this.context.save();
-        this.context.translate(this.effectiveRasterPadding, this.effectiveRasterPadding);
-        this.render();
-        this.context.restore();
-      } else {
-        this.render();
-      }
-      this.dirty = false;
-    }
+    const output = this.getRenderOutput();
 
     //offsets are for prerendering contexts of compositions
     let x = (offset?.[0] ?? 0) - this.effectiveRasterPadding;
@@ -446,7 +463,7 @@ export default abstract class Component {
     const reflectX = this.reflect[0] < 0 ? -1 : 1;
     const reflectY = this.reflect[1] < 0 ? -1 : 1;
     const pivot = this.rotationPivot;
-    this.renderer.drawRenderTarget(this.renderTarget, component.context, {
+    this.renderer.drawRenderOutput(output, component.context, {
       x,
       y,
       width: this.width,

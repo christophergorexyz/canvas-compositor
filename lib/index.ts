@@ -6,6 +6,7 @@ import * as Rendering from './rendering';
 import * as SceneSerialization from './scene-serialization';
 
 export { default as Compositor } from './compositor';
+export type { CompositorOptions } from './compositor';
 export * as Components2d from './context-2d/index';
 export * as ComponentsWebGL from './webgl';
 export { DebugOverlay, InteractionController } from './interaction';

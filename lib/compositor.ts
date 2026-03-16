@@ -1,6 +1,10 @@
 import Component from './context-2d/component';
 import Composition from './context-2d/composition';
-import Canvas2DRenderer from './rendering/canvas-2d-renderer';
+import Canvas2DCompositorBackend, { ICompositorBackend } from './rendering/canvas-2d-compositor-backend';
+
+export interface CompositorOptions {
+  backend?: ICompositorBackend;
+}
 
 /**
  * The Compositor class is the entry-point to usage of the `canvas-compositor`.
@@ -67,12 +71,7 @@ export default class Compositor extends EventTarget {
    */
   readonly canvas: HTMLCanvasElement;
 
-  /**
-   * The context used by the compositor
-   * ImageBitmapRenderingContext enables offscreen canvases to be used for rendering
-   */
-  readonly context: ImageBitmapRenderingContext;
-  readonly renderer: Canvas2DRenderer;
+  readonly backend: ICompositorBackend;
 
   /**
    * The Compositor class establishes an event dispatcher, animation loop, and scene graph for
@@ -81,19 +80,11 @@ export default class Compositor extends EventTarget {
    * @example
    * let cc = new Compositor(document.getElementById('myCanvas'));
    */
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, options?: CompositorOptions) {
     super();
     this.canvas = canvas;
-    this.renderer = new Canvas2DRenderer();
-    this.scene = new Composition(this.canvas.width, this.canvas.height, { renderer: this.renderer });
-
-    let context = this.canvas.getContext('bitmaprenderer', { alpha: false, desynchronized: true });
-
-    if (!context) {
-      throw new Error(`The root rendering context could not be created.`);
-    }
-
-    this.context = (context as ImageBitmapRenderingContext);
+    this.backend = options?.backend ?? new Canvas2DCompositorBackend(this.canvas);
+    this.scene = new Composition(this.canvas.width, this.canvas.height, { renderer: this.backend.componentRenderer });
 
     //acquire the padding on the canvas – this is necessary to properly
     //locate the mouse position
@@ -171,7 +162,7 @@ export default class Compositor extends EventTarget {
         this.canvas.height = this.scene.height;
       }
 
-      this.renderer.present(this.scene.renderTarget, this.context);
+      this.backend.present(this.scene.getRenderOutput());
     }
     this.framerate = Math.round(1000 / (this._currentTime - this._lastFrameTimestamp));
     this._lastFrameTimestamp = +new Date();
