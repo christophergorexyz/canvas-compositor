@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Canvas Compositor SVG Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+
+    #surface-stack {
+      position: relative;
+      display: inline-block;
+    }
+
+    #test-svg {
+      display: block;
+      border: 1px solid #d1d5db;
+      background: white;
+    }
+
+    #debug-canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>SVG Compositor Demo</h1>
+  <p>The same mixed scene is composed offscreen and presented through <code>SVGCompositorBackend</code>.</p>
+  <p>Selected: <strong id="selected">(none)</strong></p>
+  <div style="margin-bottom: 12px;">
+    <label style="margin-right: 12px;">
+      <input type="checkbox" id="draw-logical-bounds" />
+      Draw logical bounds
+    </label>
+    <label>
+      <input type="checkbox" id="draw-raster-bounds" />
+      Draw raster bounds
+    </label>
+  </div>
+  <div id="surface-stack">
+    <svg id="test-svg" width="800" height="600" viewBox="0 0 800 600"></svg>
+    <canvas id="debug-canvas" width="800" height="600"></canvas>
+  </div>
+  <div id="svg-debug" style="margin-top: 12px;">
+    FPS <span id="fps"></span> X: <span id="mousex"></span> Y:
+    <span id="mousey"></span> Surface:
+    <span id="surface-size"></span>
+  </div>
+  <script src="../dist/canvas-compositor.min.js"></script>
+  <script src="../demo/scene-scenario.js"></script>
+  <script src="../demo/svg-demo.js"></script>
+</body>
+
+</html>

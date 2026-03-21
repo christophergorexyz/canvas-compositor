@@ -23,11 +23,15 @@ export default class SVGCompositorBackend extends CompositorBackend {
   private readonly rasterCanvas: HTMLCanvasElement;
   private readonly rasterContext: CanvasRenderingContext2D;
   private readonly parser: DOMParser;
+  private rasterImage: SVGImageElement | null;
+  private presentationMode: 'svg' | 'raster' | null;
 
   constructor(svg: SVGSVGElement, componentRenderer: Renderer = new Canvas2DRenderer()) {
     super(componentRenderer);
     this.svg = svg;
     this.rasterCanvas = document.createElement('canvas');
+    this.rasterImage = null;
+    this.presentationMode = null;
 
     const rasterContext = this.rasterCanvas.getContext('2d');
     if (!rasterContext) {
@@ -65,7 +69,13 @@ export default class SVGCompositorBackend extends CompositorBackend {
     const root = this.parser.parseFromString(output.markup, 'image/svg+xml').documentElement;
 
     this.setViewport(output.width, output.height);
-    this.clearChildren();
+    this.rasterImage = null;
+
+    if (this.presentationMode !== 'svg') {
+      this.clearChildren();
+    } else {
+      this.clearChildren();
+    }
 
     const viewBox = root.getAttribute('viewBox');
     if (viewBox) {
@@ -75,22 +85,32 @@ export default class SVGCompositorBackend extends CompositorBackend {
     for (const child of Array.from(root.childNodes)) {
       this.svg.appendChild(document.importNode(child, true));
     }
+
+    this.presentationMode = 'svg';
   }
 
   private presentRasterizedOutput(output: IRenderOutput) {
     const bitmapOutput = asBitmapRenderOutput(output);
-    const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+    const dataUrl = this.rasterDataUrl(output);
+    let image = this.rasterImage;
+
+    if (!image || this.presentationMode !== 'raster') {
+      this.clearChildren();
+      image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+      this.svg.appendChild(image);
+      this.rasterImage = image;
+    }
 
     image.setAttribute('x', '0');
     image.setAttribute('y', '0');
     image.setAttribute('width', `${bitmapOutput.width}`);
     image.setAttribute('height', `${bitmapOutput.height}`);
     image.setAttribute('preserveAspectRatio', 'none');
-    image.setAttributeNS('http://www.w3.org/1999/xlink', 'href', this.rasterDataUrl(output));
+    image.setAttribute('href', dataUrl);
+    image.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataUrl);
 
     this.setViewport(bitmapOutput.width, bitmapOutput.height);
-    this.clearChildren();
-    this.svg.appendChild(image);
+    this.presentationMode = 'raster';
   }
 
   present(output: IRenderOutput) {
