@@ -435,6 +435,17 @@ export default abstract class Component {
     this.dirty = false;
   }
 
+  prepareForComposition() {
+    this.ensureRenderIsCurrent();
+  }
+
+  markSubtreeClean() {
+    this.dirty = false;
+    for (const child of this.children) {
+      child.markSubtreeClean();
+    }
+  }
+
   getRenderOutput(): IRenderOutput {
     this.ensureRenderIsCurrent();
 

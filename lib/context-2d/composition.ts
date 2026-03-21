@@ -219,4 +219,12 @@ export default class Composition extends Component {
     this.render();
     this.dirty = false;
   }
+
+  override prepareForComposition() {
+    for (const child of this.children) {
+      child.prepareForComposition();
+    }
+
+    this._updateBoundsForChildren();
+  }
 }

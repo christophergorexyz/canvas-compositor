@@ -5,6 +5,7 @@ export { default as Canvas2DRenderer } from './canvas-2d-renderer';
 export type { IBitmapRenderOutput, IDrawRenderTargetOptions, IRenderOutput } from './canvas-2d-renderer';
 export { default as CompositorBackend } from './compositor-backend';
 export { default as RendererBackend } from './renderer';
+export { default as SVGCompositorBackend } from './svg-compositor-backend';
 export { default as WebGLCompositorBackend } from './webgl-compositor-backend';
 export { default as WebGLRenderer } from './webgl-renderer';
 export { default as SVGRenderer } from './svg-renderer';

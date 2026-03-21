@@ -1,5 +1,5 @@
 const { Compositor, Components2d, InteractionController, DebugOverlay, Rendering, SceneSerialization } = CanvasCompositor;
-const { WebGLCompositorBackend } = Rendering;
+const { Canvas2DCompositorBackend } = Rendering;
 
 const { Composition, TransformUtils } = Components2d;
 const { serializeSceneToString, restoreScene } = SceneSerialization;
@@ -41,7 +41,7 @@ let mirrorYButton = document.getElementById('mirror-y');
 let canvas = document.getElementById('test-canvas');
 let debugCanvas = document.getElementById('debug-canvas');
 let _myCC = new Compositor(canvas, {
-  backend: new WebGLCompositorBackend(canvas),
+  backend: new Canvas2DCompositorBackend(canvas),
 });
 let interactions = new InteractionController(_myCC, {
   hitTest: (x, y) => TransformUtils.hitTestComposition(_myCC.scene, x, y),

@@ -155,15 +155,15 @@ export default class Compositor extends EventTarget {
     this._currentTime = +new Date();
     //set maximum of 60 fps and only redraw if necessary
     if (this.scene.dirty) {
-
-      this.scene.draw(this.scene);
+      const presentationOutput = this.backend.getPresentationOutput(this.scene);
 
       if (this.scene.autoResizeTargetCanvas && (this.canvas.width !== this.scene.width || this.canvas.height !== this.scene.height)) {
         this.canvas.width = this.scene.width;
         this.canvas.height = this.scene.height;
       }
 
-      this.backend.present(this.backend.getPresentationOutput(this.scene));
+      this.backend.present(presentationOutput);
+      this.scene.markSubtreeClean();
     }
     this.framerate = Math.round(1000 / (this._currentTime - this._lastFrameTimestamp));
     this._lastFrameTimestamp = +new Date();
